@@ -1,0 +1,67 @@
+[19-Jun-2019 04:12:24 America/New_York] PHP Fatal error:  Call to undefined method PHPExcel::setLoadAllSheets() in /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/excl.php on line 12
+[19-Jun-2019 04:14:41 America/New_York] PHP Fatal error:  Uncaught exception 'PHPExcel_Exception' with message 'You tried to set a sheet active by the out of bounds index: 1. The actual number of sheets is 1.' in /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/PHPExcel.php:695
+Stack trace:
+#0 /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/excl.php(21): PHPExcel->setActiveSheetIndex(1)
+#1 {main}
+  thrown in /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/PHPExcel.php on line 695
+[19-Jun-2019 04:15:44 America/New_York] PHP Fatal error:  Call to undefined method PHPExcel::setLoadAllSheets() in /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/excl.php on line 12
+[19-Jun-2019 04:15:56 America/New_York] PHP Warning:  ZipArchive::locateName(): Invalid or uninitialized Zip object in /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/PHPExcel/Reader/Excel2007.php on line 315
+[19-Jun-2019 04:15:56 America/New_York] PHP Warning:  ZipArchive::getFromIndex(): Invalid or uninitialized Zip object in /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/PHPExcel/Reader/Excel2007.php on line 316
+[19-Jun-2019 04:15:56 America/New_York] PHP Warning:  ZipArchive::locateName(): Invalid or uninitialized Zip object in /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/PHPExcel/Reader/Excel2007.php on line 319
+[19-Jun-2019 04:15:56 America/New_York] PHP Warning:  ZipArchive::getFromIndex(): Invalid or uninitialized Zip object in /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/PHPExcel/Reader/Excel2007.php on line 320
+[19-Jun-2019 04:15:56 America/New_York] PHP Notice:  Trying to get property of non-object in /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/PHPExcel/Reader/Excel2007.php on line 356
+[19-Jun-2019 04:15:56 America/New_York] PHP Warning:  Invalid argument supplied for foreach() in /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/PHPExcel/Reader/Excel2007.php on line 356
+[19-Jun-2019 04:15:56 America/New_York] PHP Warning:  ZipArchive::locateName(): Invalid or uninitialized Zip object in /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/PHPExcel/Reader/Excel2007.php on line 315
+[19-Jun-2019 04:15:56 America/New_York] PHP Warning:  ZipArchive::getFromIndex(): Invalid or uninitialized Zip object in /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/PHPExcel/Reader/Excel2007.php on line 316
+[19-Jun-2019 04:15:56 America/New_York] PHP Warning:  ZipArchive::locateName(): Invalid or uninitialized Zip object in /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/PHPExcel/Reader/Excel2007.php on line 319
+[19-Jun-2019 04:15:56 America/New_York] PHP Warning:  ZipArchive::getFromIndex(): Invalid or uninitialized Zip object in /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/PHPExcel/Reader/Excel2007.php on line 320
+[19-Jun-2019 04:15:56 America/New_York] PHP Notice:  Trying to get property of non-object in /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/PHPExcel/Reader/Excel2007.php on line 393
+[19-Jun-2019 04:15:56 America/New_York] PHP Warning:  Invalid argument supplied for foreach() in /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/PHPExcel/Reader/Excel2007.php on line 393
+[19-Jun-2019 04:15:56 America/New_York] PHP Warning:  ZipArchive::locateName(): Invalid or uninitialized Zip object in /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/PHPExcel/Reader/Excel2007.php on line 315
+[19-Jun-2019 04:15:56 America/New_York] PHP Warning:  ZipArchive::getFromIndex(): Invalid or uninitialized Zip object in /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/PHPExcel/Reader/Excel2007.php on line 316
+[19-Jun-2019 04:15:56 America/New_York] PHP Warning:  ZipArchive::locateName(): Invalid or uninitialized Zip object in /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/PHPExcel/Reader/Excel2007.php on line 319
+[19-Jun-2019 04:15:56 America/New_York] PHP Warning:  ZipArchive::getFromIndex(): Invalid or uninitialized Zip object in /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/PHPExcel/Reader/Excel2007.php on line 320
+[19-Jun-2019 04:15:56 America/New_York] PHP Notice:  Trying to get property of non-object in /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/PHPExcel/Reader/Excel2007.php on line 1706
+[19-Jun-2019 04:15:56 America/New_York] PHP Warning:  Invalid argument supplied for foreach() in /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/PHPExcel/Reader/Excel2007.php on line 1706
+[19-Jun-2019 04:15:56 America/New_York] PHP Warning:  ZipArchive::close(): Invalid or uninitialized Zip object in /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/PHPExcel/Reader/Excel2007.php on line 1734
+[19-Jun-2019 04:15:56 America/New_York] PHP Fatal error:  Call to undefined method PHPExcel::setLoadAllSheets() in /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/excl.php on line 12
+[19-Jun-2019 04:16:34 America/New_York] PHP Fatal error:  Call to undefined method PHPExcel::setLoadAllSheets() in /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/excl.php on line 12
+[19-Jun-2019 04:25:45 America/New_York] PHP Fatal error:  Uncaught exception 'PHPExcel_Exception' with message 'You tried to set a sheet active by the out of bounds index: 1. The actual number of sheets is 1.' in /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/PHPExcel.php:695
+Stack trace:
+#0 /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/excl.php(21): PHPExcel->setActiveSheetIndex(1)
+#1 {main}
+  thrown in /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/PHPExcel.php on line 695
+[19-Jun-2019 04:26:00 America/New_York] PHP Fatal error:  Call to undefined method PHPExcel::setLoadAllSheets() in /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/excl.php on line 12
+[19-Jun-2019 04:31:22 America/New_York] PHP Fatal error:  Uncaught exception 'PHPExcel_Reader_Exception' with message 'Could not open ../../uploads/abcd.xlsx for reading! File does not exist.' in /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/PHPExcel/Reader/Excel2007.php:338
+Stack trace:
+#0 /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/excl.php(11): PHPExcel_Reader_Excel2007->load('../../uploads/a...')
+#1 {main}
+  thrown in /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/PHPExcel/Reader/Excel2007.php on line 338
+[19-Jun-2019 04:32:03 America/New_York] PHP Fatal error:  Call to undefined method PHPExcel::setLoadAllSheets() in /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/excl.php on line 12
+[19-Jun-2019 04:32:18 America/New_York] PHP Fatal error:  Uncaught exception 'PHPExcel_Exception' with message 'You tried to set a sheet active by the out of bounds index: 1. The actual number of sheets is 1.' in /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/PHPExcel.php:695
+Stack trace:
+#0 /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/excl.php(21): PHPExcel->setActiveSheetIndex(1)
+#1 {main}
+  thrown in /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/PHPExcel.php on line 695
+[19-Jun-2019 04:37:20 America/New_York] PHP Fatal error:  Uncaught exception 'PHPExcel_Exception' with message 'You tried to set a sheet active by the out of bounds index: 1. The actual number of sheets is 1.' in /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/PHPExcel.php:695
+Stack trace:
+#0 /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/excl.php(21): PHPExcel->setActiveSheetIndex(1)
+#1 {main}
+  thrown in /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/PHPExcel.php on line 695
+[19-Jun-2019 04:37:35 America/New_York] PHP Fatal error:  Uncaught exception 'PHPExcel_Exception' with message 'You tried to set a sheet active by the out of bounds index: 1. The actual number of sheets is 1.' in /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/PHPExcel.php:695
+Stack trace:
+#0 /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/excl.php(21): PHPExcel->setActiveSheetIndex(1)
+#1 {main}
+  thrown in /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/PHPExcel.php on line 695
+[19-Jun-2019 04:38:04 America/New_York] PHP Fatal error:  Call to undefined method PHPExcel::setLoadAllSheets() in /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/excl.php on line 12
+[19-Jun-2019 04:39:17 America/New_York] PHP Fatal error:  Uncaught exception 'PHPExcel_Reader_Exception' with message 'Could not open ../../../uploads/uploads/abcd.xlsx for reading! File does not exist.' in /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/PHPExcel/Reader/Excel2007.php:338
+Stack trace:
+#0 /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/excl.php(11): PHPExcel_Reader_Excel2007->load('../../../upload...')
+#1 {main}
+  thrown in /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/PHPExcel/Reader/Excel2007.php on line 338
+[19-Jun-2019 04:39:26 America/New_York] PHP Fatal error:  Call to undefined method PHPExcel::setLoadAllSheets() in /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/excl.php on line 12
+[19-Jun-2019 04:45:53 America/New_York] PHP Fatal error:  Call to undefined method PHPExcel::setLoadAllSheets() in /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/excl.php on line 12
+[19-Jun-2019 04:45:57 America/New_York] PHP Fatal error:  Call to undefined method PHPExcel::setLoadAllSheets() in /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/excl.php on line 12
+[19-Jun-2019 04:46:17 America/New_York] PHP Fatal error:  Call to undefined method PHPExcel::setLoadAllSheets() in /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/excl.php on line 12
+[19-Jun-2019 04:46:20 America/New_York] PHP Fatal error:  Call to undefined method PHPExcel::setLoadAllSheets() in /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/excl.php on line 12
+[19-Jun-2019 04:46:23 America/New_York] PHP Fatal error:  Call to undefined method PHPExcel::setLoadAllSheets() in /home/pibypyvy/gifted30.com/gifted/admin/file/excelaccess/PHPExcel-1.8/Classes/excl.php on line 12

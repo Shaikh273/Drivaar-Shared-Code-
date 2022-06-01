@@ -1,0 +1,1 @@
+INSERT INTO tbl_contractordocument(`contractor_id`,`type`,`typename`,`name`,`file`,`insert_date`) VALUES('1801',14,'Drug & Alcohol Screening Report','Foram Test','documents/DrugTest/1801_sedan.png','2022-02-18 06:03:18')

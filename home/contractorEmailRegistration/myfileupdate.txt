@@ -1,0 +1,1 @@
+UPDATE tbl_contractor SET `password`='TknBjSXEGM' WHERE id =14
