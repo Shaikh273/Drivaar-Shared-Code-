@@ -1,4 +1,3 @@
-
 <?php
 $page_title="Workforce";
 include 'DB/config.php';

@@ -15,7 +15,7 @@ if (isset($_GET['set'])) {
 
 
     // This checks whether the user already attempted to login before within an certain period of time.
-    $time = time() - 30;
+    $time = time() - 60;
     $ip_address = $mysql->getIpAddr();
     $check_login_row = mysqli_fetch_assoc(mysqli_query($mysql->dbConnect(), "select count(*) as total_count from user_attempts where try_time>$time and ip_address='$ip_address'"));
     $total_count = $check_login_row['total_count'];
@@ -85,7 +85,7 @@ if (isset($_GET['set'])) {
     // login attempts counter
     else {
         if ($total_count == 3) {
-            $msg = "To many failed login attempts. Please login after 10 sec";
+            $msg = "To many failed login attempts. Please login after 60 sec";
         }
 
 
@@ -95,7 +95,7 @@ if (isset($_GET['set'])) {
             $rem_attm = 3 - $total_count;
             $rem_attm1 = 5 - $total_count;
             if ($rem_attm == 0) {
-                $msg = "To many failed login attempts. Please login after 10 sec";
+                $msg = "To many failed login attempts. Please login after 60 sec";
             } else {
                 $try_time = time();
                 $con = "insert into user_attempts(ip_address,try_time) value('$ip_address','$try_time')";
@@ -132,7 +132,7 @@ if (isset($_GET['set'])) {
     <meta name="description" content="">
     <meta name="author" content="">
     <!-- Favicon icon -->
-    <link rel="icon" type="image/png" sizes="16x16" href="./assets/images/favicon.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../assets/images/favicon.png">
     <link href="../assets/node_modules/sweetalert/sweetalert.css" rel="stylesheet" type="text/css">
     <title>Login</title>
     <link href="dist/css/pages/login-register-lock.css" rel="stylesheet">
@@ -146,11 +146,11 @@ if (isset($_GET['set'])) {
     <section id="wrapper">
         <div class="login-register" style="background-image:url(../assets/images/background/login-register.jpg);">
             <div class="login-box card">
-                <div class="card-body">
+                <div class="cardbody">
                     <form class="form-horizontal form-material" id="loginform" action="#" method="POST">
                         <h3 class="text-center m-b-20">Log-in</h3>
                         <?php if (@$msg) { ?>
-                            <div class="alert alert-danger" role="alert">
+                            <div id="alert" class="alert alert-danger" role="alert">
                                 <span class="sr-only"></span>
                                 <?= $msg ?>
                             </div>
@@ -162,7 +162,7 @@ if (isset($_GET['set'])) {
                         </div>
                         <div class="form-group">
                             <div class="col-xs-12">
-                                <input class="form-control" type="text" required="" placeholder="Password" name="pass">
+                                <input class="form-control" type="password" required="" placeholder="Password" name="pass">
                             </div>
                         </div>
                         <div class="form-group row">
@@ -183,24 +183,27 @@ if (isset($_GET['set'])) {
                             <?php
                             if (@$total_count == 3) {
                             ?><div id="timer">
-                                    <p> You can try Again after <span id="countdowntimer">10 </span> Seconds</p>
+                                    <p> You can try Again after <span id="countdowntimer" style="color:red ; font-size: 15px; font-weight: 300;">60</span> Seconds</p>
                                 </div>
                                 <script type="text/javascript">
-                                    var timeleft = 10;
+                                    var timeleft = 60;
                                     var downloadTimer = setInterval(function() {
                                         timeleft--;
                                         document.getElementById("countdowntimer").textContent = timeleft;
                                         let btn = document.querySelector("#timer");
                                         let login = document.querySelector(".btn-info");
+                                        let alert = document.querySelector("#alert");
                                         if (timeleft > 0) {
                                             login.style.display = "none";
                                             login.disabled = true;
                                         }
                                         if (timeleft == 0) {
+                                            console.log(alert);
                                             clearInterval(downloadTimer);
                                             btn.style.display = "none";
                                             login.style.display = "block";
                                             login.disabled = false;
+                                            alert.style.display = "none";
                                         }
                                     }, 1000);
                                 </script><?php } ?>

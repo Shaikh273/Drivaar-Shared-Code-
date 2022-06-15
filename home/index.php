@@ -1,7 +1,9 @@
 <?php
+
 if (!isset($_SESSION)) {
     session_start();
 }
+
 if ((isset($_SESSION['permissioncode']) && $_SESSION['permissioncode']['144'] == 1) || (isset($_SESSION['adt']) && $_SESSION['adt'] == 1)) {
 
     $userid = $_SESSION['userid'];
@@ -14,8 +16,10 @@ if ((isset($_SESSION['permissioncode']) && $_SESSION['permissioncode']['144'] ==
     header("location: login.php");
 }
 //include('authentication.php');
+
 include 'DB/config.php';
 // include_once 'DB/user_activity_log.php'; 
+
 $page_title = "Dashboard";
 $mysql = new Mysql();
 $mysql->dbConnect();
@@ -972,6 +976,7 @@ $mysql->dbDisConnect();
 
                     ]
                 };
+               
                 myChart.setOption(option, true), $(function() {
                     function resize() {
                         setTimeout(function() {

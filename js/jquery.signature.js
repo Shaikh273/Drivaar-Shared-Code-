@@ -7,7 +7,7 @@
 
 /* globals G_vmlCanvasManager */
 
-(function($) { // Hide scope, no $ conflict
+(function ($) { // Hide scope, no $ conflict
 	'use strict';
 
 	/** Signature capture and display.
@@ -67,7 +67,7 @@ $(selector).signature({color: 'blue', guideline: true}) */
 		/** Initialise a new signature area.
 			@memberof Signature
 			@private */
-		_create: function() {
+		_create: function () {
 			this.element.addClass(this.widgetFullName || this.widgetBaseClass);
 			try {
 				this.canvas = $('<canvas width="' + this.element.width() + '" height="' +
@@ -97,10 +97,10 @@ $(selector).signature({color: 'blue', guideline: true}) */
 			@memberof Signature
 			@private
 			@param {boolean} init <code>true</code> if initialising. */
-		_refresh: function(init) {
+		_refresh: function (init) {
 			if (this.resize) {
 				var parent = $(this.canvas);
-				$('div', this.canvas).css({width: parent.width(), height: parent.height()});
+				$('div', this.canvas).css({ width: parent.width(), height: parent.height() });
 			}
 			this.ctx.fillStyle = this.options.background;
 			this.ctx.strokeStyle = this.options.color;
@@ -114,7 +114,7 @@ $(selector).signature({color: 'blue', guideline: true}) */
 			@memberof Signature
 			@param {boolean} init <code>true</code> if initialising - internal use only.
 			@example $(selector).signature('clear') */
-		clear: function(init) {
+		clear: function (init) {
 			if (this.options.disabled) {
 				return;
 			}
@@ -142,7 +142,7 @@ $(selector).signature({color: 'blue', guideline: true}) */
 			@memberof Signature
 			@private
 			@param {Event} event The triggering event. */
-		_changed: function(event) {
+		_changed: function (event) {
 			if (this.options.syncField) {
 				var output = '';
 				switch (this.options.syncFormat) {
@@ -167,7 +167,7 @@ $(selector).signature({color: 'blue', guideline: true}) */
 			@memberof Signature
 			@private
 			@param {object} options The new option values. */
-		_setOptions: function(/* options */) {
+		_setOptions: function (/* options */) {
 			if (this._superApply) {
 				this._superApply(arguments); // Base widget handling
 			}
@@ -192,7 +192,7 @@ $(selector).signature({color: 'blue', guideline: true}) */
 			@private
 			@param {Event} event The triggering mouse event.
 			@return {boolean} <code>true</code> if allowed, <code>false</code> if not */
-		_mouseCapture: function(/* event */) {
+		_mouseCapture: function (/* event */) {
 			return !this.options.disabled;
 		},
 
@@ -200,12 +200,12 @@ $(selector).signature({color: 'blue', guideline: true}) */
 			@memberof Signature
 			@private
 			@param {Event} event The triggering mouse event. */
-		_mouseStart: function(event) {
+		_mouseStart: function (event) {
 			this.offset = this.element.offset();
 			this.offset.left -= document.documentElement.scrollLeft || document.body.scrollLeft;
 			this.offset.top -= document.documentElement.scrollTop || document.body.scrollTop;
 			this.lastPoint = [this._round(event.clientX - this.offset.left),
-				this._round(event.clientY - this.offset.top)];
+			this._round(event.clientY - this.offset.top)];
 			this.curLine = [this.lastPoint];
 			this.lines.push(this.curLine);
 		},
@@ -214,9 +214,9 @@ $(selector).signature({color: 'blue', guideline: true}) */
 			@memberof Signature
 			@private
 			@param {Event} event The triggering mouse event. */
-		_mouseDrag: function(event) {
+		_mouseDrag: function (event) {
 			var point = [this._round(event.clientX - this.offset.left),
-				this._round(event.clientY - this.offset.top)];
+			this._round(event.clientY - this.offset.top)];
 			this.curLine.push(point);
 			this.ctx.beginPath();
 			this.ctx.moveTo(this.lastPoint[0], this.lastPoint[1]);
@@ -229,7 +229,7 @@ $(selector).signature({color: 'blue', guideline: true}) */
 			@memberof Signature
 			@private
 			@param {Event} event The triggering mouse event. */
-		_mouseStop: function(event) {
+		_mouseStop: function (event) {
 			if (this.curLine.length === 1) {
 				event.clientY += this.options.thickness;
 				this._mouseDrag(event);
@@ -244,7 +244,7 @@ $(selector).signature({color: 'blue', guideline: true}) */
 			@private
 			@param {number} value The value to round.
 			@return {number} The rounded value. */
-		_round: function(value) {
+		_round: function (value) {
 			return Math.round(value * 100) / 100;
 		},
 
@@ -252,11 +252,11 @@ $(selector).signature({color: 'blue', guideline: true}) */
 			@memberof Signature
 			@return {string} The JSON text version of the lines.
 			@example var json = $(selector).signature('toJSON') */
-		toJSON: function() {
-			return '{"lines":[' + $.map(this.lines, function(line) {
-				return '[' + $.map(line, function(point) {
-						return '[' + point + ']';
-					}) + ']';
+		toJSON: function () {
+			return '{"lines":[' + $.map(this.lines, function (line) {
+				return '[' + $.map(line, function (point) {
+					return '[' + point + ']';
+				}) + ']';
 			}) + ']}';
 		},
 
@@ -264,7 +264,7 @@ $(selector).signature({color: 'blue', guideline: true}) */
 			@memberof Signature
 			@return {string} The SVG text version of the lines.
 			@example var svg = $(selector).signature('toSVG') */
-		toSVG: function() {
+		toSVG: function () {
 			var attrs1 = (this.options.svgStyles ? 'style="fill: ' + this.options.background + ';"' :
 				'fill="' + this.options.background + '"');
 			var attrs2 = (this.options.svgStyles ?
@@ -275,21 +275,21 @@ $(selector).signature({color: 'blue', guideline: true}) */
 				'<svg xmlns="http://www.w3.org/2000/svg" width="15cm" height="15cm">\n' +
 				'	<g ' + attrs1 + '>\n' +
 				'		<rect x="0" y="0" width="' + this.canvas.width + '" height="' + this.canvas.height + '"/>\n' +
-				'		<g ' + attrs2 +	'>\n'+
-				$.map(this.lines, function(line) {
+				'		<g ' + attrs2 + '>\n' +
+				$.map(this.lines, function (line) {
 					return '			<polyline points="' +
-						$.map(line, function(point) { return point + ''; }).join(' ') + '"/>\n';
+						$.map(line, function (point) { return point + ''; }).join(' ') + '"/>\n';
 				}).join('') +
 				'		</g>\n	</g>\n</svg>\n';
 		},
-		
+
 		/** Convert the captured lines to an image encoded in a <code>data:</code> URL.
 			@memberof Signature
 			@param {string} [type='image/png'] The MIME type of the image.
 			@param {number} [quality=0.92] The image quality, between 0 and 1.
 			@return {string} The signature as a data: URL image.
 			@example var data = $(selector).signature('toDataURL', 'image/jpeg') */
-		toDataURL: function(type, quality) {
+		toDataURL: function (type, quality) {
 			return this.canvas.toDataURL(type, quality);
 		},
 
@@ -299,7 +299,7 @@ $(selector).signature({color: 'blue', guideline: true}) */
 			@param {object|string} sig An object with attribute <code>lines</code> being an array of arrays of points
 							or the text version of the JSON or SVG or a <code>data:</code> URL containing an image.
 			@example $(selector).signature('draw', sigAsJSON) */
-		draw: function(sig) {
+		draw: function (sig) {
 			if (this.options.disabled) {
 				return;
 			}
@@ -320,15 +320,15 @@ $(selector).signature({color: 'blue', guideline: true}) */
 			@param {object|string} sig An object with attribute <code>lines</code> being an array of arrays of points
 							or the text version of the JSON.
 			@param {number} scale A scaling factor. */
-		_drawJSON: function(sig, scale) {
+		_drawJSON: function (sig, scale) {
 			if (typeof sig === 'string') {
 				sig = $.parseJSON(sig);
 			}
 			this.lines = sig.lines || [];
 			var ctx = this.ctx;
-			$.each(this.lines, function() {
+			$.each(this.lines, function () {
 				ctx.beginPath();
-				$.each(this, function(i) {
+				$.each(this, function (i) {
 					ctx[i === 0 ? 'moveTo' : 'lineTo'](this[0] * scale, this[1] * scale);
 				});
 				ctx.stroke();
@@ -340,20 +340,20 @@ $(selector).signature({color: 'blue', guideline: true}) */
 			@private
 			@param {string} sig The text version of the SVG.
 			@param {number} scale A scaling factor. */
-		_drawSVG: function(sig, scale) {
+		_drawSVG: function (sig, scale) {
 			var lines = this.lines = [];
-			$(sig).find('polyline').each(function() {
+			$(sig).find('polyline').each(function () {
 				var line = [];
-				$.each($(this).attr('points').split(' '), function(i, point) {
+				$.each($(this).attr('points').split(' '), function (i, point) {
 					var xy = point.split(',');
 					line.push([parseFloat(xy[0]), parseFloat(xy[1])]);
 				});
 				lines.push(line);
 			});
 			var ctx = this.ctx;
-			$.each(this.lines, function() {
+			$.each(this.lines, function () {
 				ctx.beginPath();
-				$.each(this, function(i) {
+				$.each(this, function (i) {
 					ctx[i === 0 ? 'moveTo' : 'lineTo'](this[0] * scale, this[1] * scale);
 				});
 				ctx.stroke();
@@ -366,10 +366,10 @@ $(selector).signature({color: 'blue', guideline: true}) */
 			@private
 			@param {string} sig The <code>data:</code> URL containing an image.
 			@param {number} scale A scaling factor. */
-		_drawDataURL: function(sig, scale) {
+		_drawDataURL: function (sig, scale) {
 			var image = new Image();
 			var context = this.ctx;
-			image.onload = function() {
+			image.onload = function () {
 				context.drawImage(this, 0, 0, image.width * scale, image.height * scale);
 			};
 			image.src = sig;
@@ -379,14 +379,14 @@ $(selector).signature({color: 'blue', guideline: true}) */
 			@memberof Signature
 			@return {boolean} <code>true</code> if not signed, <code>false</code> if signed.
 			@example if ($(selector).signature('isEmpty')) ... */
-		isEmpty: function() {
+		isEmpty: function () {
 			return this.lines.length === 0;
 		},
 
 		/** Remove the signature functionality.
 			@memberof Signature
 			@private */
-		_destroy: function() {
+		_destroy: function () {
 			this.element.removeClass(this.widgetFullName || this.widgetBaseClass);
 			$(this.canvas).remove();
 			this.canvas = this.ctx = this.lines = null;
@@ -397,7 +397,7 @@ $(selector).signature({color: 'blue', guideline: true}) */
 	if (!$.Widget.prototype._destroy) {
 		$.extend(signatureOverrides, {
 			/* Remove the signature functionality. */
-			destroy: function() {
+			destroy: function () {
 				this._destroy();
 				$.Widget.prototype.destroy.call(this); // Base widget handling
 			}
@@ -407,7 +407,7 @@ $(selector).signature({color: 'blue', guideline: true}) */
 	if ($.Widget.prototype._getCreateOptions === $.noop) {
 		$.extend(signatureOverrides, {
 			/* Restore the metadata functionality. */
-			_getCreateOptions: function() {
+			_getCreateOptions: function () {
 				return $.metadata && $.metadata.get(this.element[0])[this.widgetName];
 			}
 		});

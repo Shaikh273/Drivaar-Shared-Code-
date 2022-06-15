@@ -1,3 +1,3 @@
 <?php
-header("Location: contractorAdmin/");
+header("Location: home/startpage/Drivaar.php");
 ?>

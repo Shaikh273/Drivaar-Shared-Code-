@@ -211,4 +211,3 @@ while($result = mysqli_fetch_array($row))
 	}
 }
 $mysql->dbDisconnect();
-?>

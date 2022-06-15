@@ -20,7 +20,7 @@ else {
 
         // This checks whether the user already attempted to login before within an certain period of time.
         $time = time() - 30;
-        $ip_address = getIpAddr();
+        $ip_address = $mysql->getIpAddr();
         $check_login_row = mysqli_fetch_assoc(mysqli_query($connection, "select count(*) as total_count from user_attempts where try_time>$time and ip_address='$ip_address'"));
         $total_count = $check_login_row['total_count'];
 
@@ -101,19 +101,6 @@ else {
     }
 }
 
-
-// This wil get the IP address of the user.
-function getIpAddr()
-{
-    if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
-        $ipAddr = $_SERVER['HTTP_CLIENT-IP'];
-    } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-        $ipAddr = $_SERVER['HTTP_X_FORWARDED_FOR'];
-    } else {
-        $ipAddr = $_SERVER['REMOTE_ADDR'];
-    }
-    return $ipAddr;
-}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -143,7 +130,7 @@ function getIpAddr()
                     <form class="form-horizontal form-material" id="loginform" action="#" method="POST">
                         <h3 class="text-center m-b-20">Log-in</h3>
                         <?php if (@$msg) { ?>
-                            <div class="alert alert-danger" role="alert">
+                            <div id="alert" class="alert alert-danger" role="alert">
                                 <span class="sr-only"></span>
                                 <?= $msg ?>
                             </div>
@@ -174,11 +161,11 @@ function getIpAddr()
                         <div class="form-group text-center">
 
 
-                              <!-- This will start a timer at failed login attempt. -->
+                            <!-- This will start a timer at failed login attempt. -->
                             <?php
                             if (@$total_count == 3) {
                             ?><div id="timer">
-                                    <p> You can try Again after <span id="countdowntimer">10 </span> Seconds</p>
+                                    <p> You can try Again after <span id="countdowntimer">10</span> Seconds</p>
                                 </div>
                                 <script type="text/javascript">
                                     var timeleft = 10;
@@ -187,20 +174,23 @@ function getIpAddr()
                                         document.getElementById("countdowntimer").textContent = timeleft;
                                         let btn = document.querySelector("#timer");
                                         let login = document.querySelector(".btn-info");
+                                        let alert = document.querySelector("#alert");
                                         if (timeleft > 0) {
                                             login.style.display = "none";
                                             login.disabled = true;
                                         }
                                         if (timeleft == 0) {
+                                            console.log(alert);
                                             clearInterval(downloadTimer);
                                             btn.style.display = "none";
                                             login.style.display = "block";
                                             login.disabled = false;
+                                            alert.style.display = "none";
                                         }
                                     }, 1000);
-                                </script><?php }  ?>
+                                </script><?php } ?>
 
-                                
+
                             <div class="col-xs-12 p-b-20">
                                 <button class="btn btn-block btn-lg btn-info btn-rounded" type="submit" name="loginsub">Log In</button>
                             </div>

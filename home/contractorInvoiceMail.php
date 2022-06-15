@@ -11,7 +11,7 @@
 	    } elseif($n > 26) {
 	        $dividend   = ($n);
 	        $alpha      = '';
-	        $modulo;
+	        $modulo      ='';
 	        while($dividend > 0){
 	            $modulo     = ($dividend - 1) % 26;
 	            $alpha      = $alphabet[$modulo].$alpha;

@@ -22,7 +22,7 @@ if (isset($_GET['set'])) {
 
 
    // String Validation
-   $user = mysqli_real_escape_string($mysql->dbConnect(), $_POST['user']);
+   $user = mysqli_real_escape_string($mysql->dbConnect(),$_POST['user']);
    $pass = mysqli_real_escape_string($mysql->dbConnect(), $_POST['pass']);
    $userquery = "SELECT `tbl_user`.*,`tbl_permissioncheck`.`permissioncode` 
     FROM `tbl_user` 
@@ -51,10 +51,7 @@ if (isset($_GET['set'])) {
                // Will clear IP address from the db
                $_SESSION['IS_LOGIN'] = 'yes';
                mysqli_query($mysql->dbConnect(), "delete from user_attempts where id='userid' && ip_address='$ip_address'");
-            }
-            
-            
-            else {
+            } else {
                $msg = "Permission can not give, Please verify your permission.";
             }
          } else if ($row['ispasswordchange'] == 1) {
@@ -74,10 +71,7 @@ if (isset($_GET['set'])) {
                // Clear IP Address from database
                $_SESSION['IS_LOGIN'] = 'yes';
                mysqli_query($mysql->dbConnect(), "delete from user_attempts where ip_address='$ip_address'");
-            } 
-            
-            
-            else {
+            } else {
                $msg = "Permission can not give, Please verify your permission.";
             }
          } else {
@@ -99,7 +93,7 @@ if (isset($_GET['set'])) {
       else {
          $total_count++;
          $rem_attm = 3 - $total_count;
-         $rem_attm1 = 5 - $total_count;
+         // $rem_attm1 = 5 - $total_count;
          if ($rem_attm == 0) {
             $msg = "To many failed login attempts. Please login after 10 sec";
          } else {
@@ -156,7 +150,7 @@ if (isset($_GET['set'])) {
                <form class="form-horizontal form-material" id="loginform" action="#" method="POST">
                   <h3 class="text-center m-b-20">Log-in</h3>
                   <?php if (@$msg) { ?>
-                     <div class="alert alert-danger" role="alert">
+                     <div id="alert" class="alert alert-danger" role="alert">
                         <span class="sr-only"></span>
                         <?= $msg ?>
                      </div>
@@ -189,7 +183,7 @@ if (isset($_GET['set'])) {
                      <?php
                      if (@$total_count == 3) {
                      ?><div id="timer">
-                           <p> You can try Again after <span id="countdowntimer">10 </span> Seconds</p>
+                           <p> You can try Again after <span id="countdowntimer">10</span> Seconds</p>
                         </div>
                         <script type="text/javascript">
                            var timeleft = 10;
@@ -198,15 +192,18 @@ if (isset($_GET['set'])) {
                               document.getElementById("countdowntimer").textContent = timeleft;
                               let btn = document.querySelector("#timer");
                               let login = document.querySelector(".btn-info");
+                              let alert = document.querySelector("#alert");
                               if (timeleft > 0) {
                                  login.style.display = "none";
                                  login.disabled = true;
                               }
                               if (timeleft == 0) {
+                                 console.log(alert);
                                  clearInterval(downloadTimer);
                                  btn.style.display = "none";
                                  login.style.display = "block";
                                  login.disabled = false;
+                                 alert.style.display = "none";
                               }
                            }, 1000);
                         </script><?php } ?>

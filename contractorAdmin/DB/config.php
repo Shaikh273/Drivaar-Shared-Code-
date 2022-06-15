@@ -21,6 +21,8 @@ class Mysql extends Dbconfig {
 
     protected $passCode;
 
+    protected $ipAddr;
+
     function Mysql() {
 
         $this -> connectionString = NULL;
@@ -47,11 +49,11 @@ class Mysql extends Dbconfig {
 
     function dbConnect()    {
 
-        // $this -> connectionString = new mysqli($this -> serverName,$this -> userName,$this -> passCode, $this -> databaseName);
+        $this -> connectionString = new mysqli($this -> serverName,$this -> userName,$this -> passCode, $this -> databaseName);
 
         // return $this -> connectionString;
 
-        $this -> connectionString = new mysqli('localhost','root','','drivaar_db');
+        // $this -> connectionString = new mysqli('localhost','root','','drivaar_db');
 
         return $this -> connectionString;
 
@@ -495,7 +497,40 @@ class Mysql extends Dbconfig {
     //     return $msg;
 
     // }
+    
+    
+    function getIpAddr(){
+        if(!empty($_SERVER['HTTP_CLIENT_IP'])){
+            $ipAddr=$_SERVER['HTTP_CLIENT-IP'];
+        }elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])){
+            $ipAddr=$_SERVER['HTTP_X_FORWARDED_FOR'];
+        }else{
+            $ipAddr=$_SERVER['REMOTE_ADDR'];
+        }
+        return $ipAddr;
+    }
+
 
 }
 
-?>
+//Added this new code For LOGs
+$mysql = new Mysql();
+$mysql->dbConnect();
+
+// Get current page URL 
+$protocol = ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
+
+$user_current_url = $protocol . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] . $_SERVER['QUERY_STRING'];
+
+// Get server related info 
+//  $user_ip_address = $_SERVER['REMOTE_ADDR']; il get the IP address of the user.
+$user_ip_address = $mysql->getIpAddr();
+$referrer_url = !empty($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '/';
+$user_agent = $_SERVER['HTTP_USER_AGENT'];
+
+// Insert visitor activity log into database 
+$sql ="insert into visitor_activity_logs(user_ip_address, user_agent, page_url, referrer_url) values   ('$user_ip_address','$user_agent','$user_current_url','$user_agent')";
+$insert = mysqli_query($mysql->dbConnect(),$sql);
+
+
+?> 

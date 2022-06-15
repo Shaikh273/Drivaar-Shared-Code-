@@ -2,15 +2,16 @@
 
 include 'dbconfig.php';
 // localhost original (change variable name to $webroot for original) 
-$webroot1 = 'http://localhost/home/';//http://localhost/drivaar/home/login.php
+//$webroot = 'http://localhost/home/';//http://localhost/drivaar/home/login.php
 
 
 // new localhost created for testing
-$webroot = 'http://localhost/drivaar/home/';//http://localhost/drivaar/home/login.php
+$webroot = 'http://localhost/drivaar/home/'; //http://localhost/drivaar/home/login.php
 date_default_timezone_set('Europe/London');
 
 
-class Mysql extends Dbconfig {
+class Mysql extends Dbconfig
+{
 
     public $connectionString;
 
@@ -27,101 +28,96 @@ class Mysql extends Dbconfig {
     protected $passCode;
 
     protected $ipAddr;
-    
 
-    function Mysql() {
+    public $data;
 
-        $this -> connectionString = NULL;
 
-        $this -> sqlQuery = NULL;
+    function Mysql()
+    {
 
-        $this -> dataSet = NULL;
+        $this->connectionString = NULL;
+
+        $this->sqlQuery = NULL;
+
+        $this->dataSet = NULL;
 
         $dbPara = new Dbconfig();
 
-        $this -> databaseName = $dbPara -> dbName;
+        $this->databaseName = $dbPara->dbName;
 
-        $this -> hostName = $dbPara -> serverName;
+        $this->hostName = $dbPara->serverName;
 
-        $this -> userName = $dbPara -> userName;
+        $this->userName = $dbPara->userName;
 
-        $this -> passCode = $dbPara ->passCode;
+        $this->passCode = $dbPara->passCode;
 
         $dbPara = NULL;
-
     }
 
-  
 
-    function dbConnect()    {
+
+    function dbConnect()
+    {
         // original database
-       // $this -> connectionString = new mysqli($this -> serverName,$this -> userName,$this -> passCode, $this -> databaseName);
+        // $this -> connectionString = new mysqli($this -> serverName,$this -> userName,$this -> passCode, $this -> databaseName);
 
-       // new localhost for running locally
-       $this -> connectionString = new mysqli('localhost','root','','drivaar_db');
+        // new localhost for running locally
+        $this->connectionString = new mysqli('localhost', 'root', '', 'drivaar_db');
 
-        return $this -> connectionString;
-
+        return $this->connectionString;
     }
 
 
 
-    function dbDisconnect() {
+    function dbDisconnect()
+    {
 
-        $this -> connectionString = NULL;
+        $this->connectionString = NULL;
 
-        $this -> sqlQuery = NULL;
+        $this->sqlQuery = NULL;
 
-        $this -> dataSet = NULL;
+        $this->dataSet = NULL;
 
-        $this -> databaseName = NULL;
+        $this->databaseName = NULL;
 
-        $this -> hostName = NULL;
+        $this->hostName = NULL;
 
-        $this -> userName = NULL;
+        $this->userName = NULL;
 
-        $this -> passCode = NULL;
-
+        $this->passCode = NULL;
     }
 
 
     function checkpermission($pageid)
     {
-        if(!isset($_SESSION)) 
-        {
+        if (!isset($_SESSION)) {
             session_start();
         }
-        if((isset($_SESSION['permissioncode']) && $_SESSION['permissioncode'][$pageid]==1) || (isset($_SESSION['adt']) && $_SESSION['adt']==1))
-        {
-            
-        }
-        else
-        {
-            if((isset($_SESSION['adt']) && $_SESSION['adt']==1))
-            {
+        if ((isset($_SESSION['permissioncode']) && $_SESSION['permissioncode'][$pageid] == 1) || (isset($_SESSION['adt']) && $_SESSION['adt'] == 1)) {
+        } else {
+            if ((isset($_SESSION['adt']) && $_SESSION['adt'] == 1)) {
                 header("location: login.php");
-            }
-            else
-            {
+            } else {
                 header("location: login.php");
             }
         }
     }
 
 
-    function selectAll($tableName)  {
+    function selectAll($tableName)
+    {
 
-        $this -> sqlQuery = 'SELECT * FROM '.$tableName;
+        $this->sqlQuery = 'SELECT * FROM ' . $tableName;
 
-        $this -> dataSet = mysqli_query($this -> connectionString, $this -> sqlQuery);
+        $this->dataSet = mysqli_query($this->connectionString, $this->sqlQuery);
 
-        return $this -> dataSet;
-
+        return $this->dataSet;
     }
 
-    
 
-    function logg($valus){
+
+    function logg($valus)
+    {
 
         $vs1 = array();
 
@@ -129,62 +125,58 @@ class Mysql extends Dbconfig {
 
         $cn = count($valus);
 
-        $j=0;
+        $j = 0;
 
-        while($j<$cn){
-            $i=0;
+        while ($j < $cn) {
+            $i = 0;
 
-            foreach($valus[$j] as $key => $val){
+            foreach ($valus[$j] as $key => $val) {
 
                 // print $i."3--0--";
 
-                $vs2[$i] =$key."=>".$val;
+                $vs2[$i] = $key . "=>" . $val;
 
                 $i++;
-
             }
 
             $vs1[$j] = $vs2;
             $j++;
-
         }
         // $myfile = fopen("myfileloginsert.txt", "w") or die("Unable to open file!");
         // fwrite($myfile,  "'".json_encode($vs1)."'");
         // fclose($myfile);
-        return $str ="'".json_encode($vs1)."'";
+        return $str = "'" . json_encode($vs1) . "'";
     }
 
 
-    function SendMessage($emlusername,$emlpassword,$emltitle,$subject,$body,$dataMsg,$email,$name)
+    function SendMessage($emlusername, $emlpassword, $emltitle, $subject, $body, $dataMsg, $email, $name)
     {
-        
-        require_once('phpmailer/class.phpmailer.php');
-        $mail = new PHPMailer(true);            
-        $mail->IsSMTP(); 
-          try {
-          $mail->Host       = "smtp.gmail.com"; 
-          $mail->SMTPDebug  = 0;
-          $mail->SMTPAuth   = true; 
-          $mail->Port       = 587;
-          $mail->SMTPSecure = 'tls';     
-          $mail->Username   = $emlusername; 
-          $mail->Password   = $emlpassword;        
-          $mail->AddAddress($email,$name);
-          $mail->SetFrom($emlusername,$emltitle);
-          $mail->mailtype = 'html';
-          $mail->charset = 'iso-8859-1';
-          $mail->wordwrap = TRUE;
-          $mail->Subject = $subject;
-          $mail->AltBody = $body; 
-          $mail->MsgHTML($dataMsg);
-          $mail->Send();
-          
-        } catch (phpmailerException $e) {
-          //echo $e->errorMessage()."123"; exit;
-        } catch (Exception $e) {
-          //echo $e->getMessage()."4567";  exit;    
-        } 
 
+        require_once('phpmailer/class.phpmailer.php');
+        $mail = new PHPMailer(true);
+        $mail->IsSMTP();
+        try {
+            $mail->Host       = "smtp.gmail.com";
+            $mail->SMTPDebug  = 0;
+            $mail->SMTPAuth   = true;
+            $mail->Port       = 587;
+            $mail->SMTPSecure = 'tls';
+            $mail->Username   = $emlusername;
+            $mail->Password   = $emlpassword;
+            $mail->AddAddress($email, $name);
+            $mail->SetFrom($emlusername, $emltitle);
+            $mail->mailtype = 'html';
+            $mail->charset = 'iso-8859-1';
+            $mail->wordwrap = TRUE;
+            $mail->Subject = $subject;
+            $mail->AltBody = $body;
+            $mail->MsgHTML($dataMsg);
+            $mail->Send();
+        } catch (phpmailerException $e) {
+            //echo $e->errorMessage()."123"; exit;
+        } catch (Exception $e) {
+            //echo $e->getMessage()."4567";  exit;    
+        }
     }
 
     // function loggup($tableName, $valus, $clname,$optype, $where){
@@ -217,7 +209,7 @@ class Mysql extends Dbconfig {
 
     //         }
 
-            
+
 
     //     }
 
@@ -235,108 +227,108 @@ class Mysql extends Dbconfig {
 
 
 
-    function loggi($tableName, $valus, $optype){
+    function loggi($tableName, $valus, $optype)
+    {
         $ovalus = "";
         $str = $this->logg($valus);
-        $this -> sqlQuery = 'INSERT INTO `log`(`userid`,`operation_type`, `old_value`, `new_value`, `tablename`) VALUES(0,'.$optype.','.$ovalus.' ,'.$str.','.$tableName.')';
+        $this->sqlQuery = 'INSERT INTO `log`(`userid`,`operation_type`, `old_value`, `new_value`, `tablename`) VALUES(0,' . $optype . ',' . $ovalus . ' ,' . $str . ',' . $tableName . ')';
         // $myfile = fopen("myfileloginsert.txt", "w") or die("Unable to open file!");
         // fwrite($myfile,  $str);
         // fclose($myfile);
-        mysqli_query($this ->connectionString , $this -> sqlQuery);
-        return mysqli_info($this ->connectionString);
-     }
+        mysqli_query($this->connectionString, $this->sqlQuery);
+        return mysqli_info($this->connectionString);
+    }
 
 
-    function update($tableName, $valus, $clname, $optype, $where){
-      // $this-> loggup($tableName, $valus, $clname, $optype, $where);
-       $this-> sqlQuery = 'UPDATE '.$tableName.' SET ';       
-       $vls = array();
-       $i = 0;
-       $val1 = "";
-       $str = "";
-       $j =0;
+    function update($tableName, $valus, $clname, $optype, $where)
+    {
+        // $this-> loggup($tableName, $valus, $clname, $optype, $where);
+        $this->sqlQuery = 'UPDATE ' . $tableName . ' SET ';
+        $vls = array();
+        $i = 0;
+        $val1 = "";
+        $str = "";
+        $j = 0;
 
-       $countvalus = count($valus);
+        $countvalus = count($valus);
 
-       while($j < $countvalus){
+        while ($j < $countvalus) {
 
-           $i=0;
+            $i = 0;
 
-       foreach($valus[$j] as $key => $val){
+            foreach ($valus[$j] as $key => $val) {
 
-           if(is_int($val) == false){
+                if (is_int($val) == false) {
 
-               $str = "'";
+                    $str = "'";
 
-               $str .= $val;
+                    $str .= $val;
 
-               $str .= "'";
+                    $str .= "'";
+                } else {
 
-           }        
+                    $str = $val;
+                }
 
-           else{
+                $val1 .= "`" . $key . "`=" . $str . ",";
 
-               $str = $val;
+                $i++;
+            }
 
-           }
+            $val1 = substr_replace($val1, "", -1);
 
-           $val1 .= "`".$key."`=".$str.",";
-
-           $i++;
-
+            $this->sqlQuery .= $val1;
+            $j++;
         }
 
-       $val1 = substr_replace($val1, "", -1);
-
-       $this-> sqlQuery .= $val1;        
-       $j++;
-       }
-
-       $this-> sqlQuery .= ' WHERE '.$where;
+        $this->sqlQuery .= ' WHERE ' . $where;
 
         // $myfile = fopen("myfileupdate.txt", "w") or die("Unable to open file!");
         // fwrite($myfile, $this -> sqlQuery."\n");
         // fclose($myfile);
-        
-       mysqli_query($this ->connectionString , $this -> sqlQuery);
-       //echo $this -> sqlQuery;
-       return mysqli_info($this ->connectionString);
+
+        mysqli_query($this->connectionString, $this->sqlQuery);
+        //echo $this -> sqlQuery;
+        return mysqli_info($this->connectionString);
     }
 
 
 
-    function insertre($tableName, $valus){
-        $this -> createinsert($tableName, $valus);
+    function insertre($tableName, $valus)
+    {
+        $this->createinsert($tableName, $valus);
         // $this-> loggi($tableName, $valus, 'insert');
-        
+
         // $myfile = fopen("myfile12.txt", "w") or die("Unable to open file!");
         // fwrite($myfile, $this -> sqlQuery."\n");
         // fclose($myfile);
-        mysqli_query($this ->connectionString , $this -> sqlQuery);
+        mysqli_query($this->connectionString, $this->sqlQuery);
         //echo $this -> sqlQuery;
-   //     echo $this -> sqlQuery;
-        $this -> sqlQuery = NULL;
-        return mysqli_insert_id($this -> connectionString);
+        //     echo $this -> sqlQuery;
+        $this->sqlQuery = NULL;
+        return mysqli_insert_id($this->connectionString);
     }
 
 
 
-    function insert($tableName, $valus){
-        $this ->  createinsert($tableName, $valus);
+    function insert($tableName, $valus)
+    {
+        $this->createinsert($tableName, $valus);
         //$this-> loggi($tableName, $valus, 'insert');
         // $myfile = fopen("myfile.txt", "w") or die("Unable to open file!");
         // fwrite($myfile, $this -> sqlQuery."\n");
         // fclose($myfile);
-        mysqli_query($this ->connectionString , $this -> sqlQuery);
+        mysqli_query($this->connectionString, $this->sqlQuery);
         // echo $this -> sqlQuery; 
         // $this -> sqlQuery = NULL;
-        return $this -> sqlQuery;
+        return $this->sqlQuery;
     }
 
-  
-    function createinsert($tableName, $valus){
 
-        $this-> sqlQuery = 'INSERT INTO '.$tableName;
+    function createinsert($tableName, $valus)
+    {
+
+        $this->sqlQuery = 'INSERT INTO ' . $tableName;
 
         $vls = array();
 
@@ -350,79 +342,71 @@ class Mysql extends Dbconfig {
 
         $countvalus = count($valus);
 
-        while($i < $countvalus){
+        while ($i < $countvalus) {
 
-        $val1 = "(";
+            $val1 = "(";
 
-        foreach($valus[$i] as $key => $val){
+            foreach ($valus[$i] as $key => $val) {
 
-            if($i==0){
+                if ($i == 0) {
 
-                $clname .=  "`".$key."`,";
+                    $clname .=  "`" . $key . "`,";
+                }
 
+                if (is_int($val) == false) {
+
+                    $str = "'";
+
+                    $str .= $val;
+
+                    $str .= "'";
+                } else {
+
+                    $str = $val;
+                }
+
+                $val1 .= $str . ",";
             }
 
-            if(is_int($val) == false){
+            $val1 = substr_replace($val1, "", -1);
 
-                $str = "'";
+            $val1 .= ")";
 
-                $str .= $val;
+            $vls[$i] = $val1;
 
-                $str .= "'";
-
-            }        
-
-            else{
-
-                $str = $val;
-
-            }
-
-            $val1 .= $str.",";
-
-         }
-
-        $val1 = substr_replace($val1, "", -1);
-
-        $val1 .=")";
-
-        $vls[$i] = $val1;
-
-        $i++;
-
+            $i++;
         }
 
         $clname = substr_replace($clname, "", -1);
 
-        $clname .=")";
+        $clname .= ")";
 
-        $this-> sqlQuery .= $clname." VALUES";
+        $this->sqlQuery .= $clname . " VALUES";
 
         $k = 0;
 
         $cou = count($vls);
 
-        while($k<$cou){
+        while ($k < $cou) {
 
-        $this-> sqlQuery .= $vls[$k] .",";
+            $this->sqlQuery .= $vls[$k] . ",";
 
-        $k++;
-
+            $k++;
         }
 
-        $this -> sqlQuery = substr_replace($this -> sqlQuery, "", -1);
+        $this->sqlQuery = substr_replace($this->sqlQuery, "", -1);
 
         //  $myfile = fopen("myfileinsert12.txt", "w") or die("Unable to open file!");
         // fwrite($myfile, $this -> sqlQuery."\n");
         // fclose($myfile);
 
-        return $this -> sqlQuery;
+        return $this->sqlQuery;
     }
 
 
     function OnduplicateInsert($tableName, $valus, $extra)
     {
-        $this-> sqlQuery = 'INSERT INTO '.$tableName;
+        $this->sqlQuery = 'INSERT INTO ' . $tableName;
 
         $vls = array();
 
@@ -436,117 +420,109 @@ class Mysql extends Dbconfig {
 
         $countvalus = count($valus);
 
-        while($i < $countvalus){
+        while ($i < $countvalus) {
 
-        $val1 = "(";
+            $val1 = "(";
 
-        foreach($valus[$i] as $key => $val){
+            foreach ($valus[$i] as $key => $val) {
 
-            if($i==0){
+                if ($i == 0) {
 
-                $clname .=  "`".$key."`,";
+                    $clname .=  "`" . $key . "`,";
+                }
+                if (is_int($val) == true) {
 
+                    $str = $val;
+                } else {
+                    $str = "'";
+
+                    $str .= $val;
+
+                    $str .= "'";
+                }
+
+                $val1 .= $str . ",";
             }
-            if(is_int($val) == true){
 
-                $str = $val;
+            $val1 = substr_replace($val1, "", -1);
 
-            }        
-            else
-            {
-                $str = "'";
+            $val1 .= ")";
 
-                $str .= $val;
+            $vls[$i] = $val1;
 
-                $str .= "'";
-            }
-
-            $val1 .= $str.",";
-
-         }
-
-        $val1 = substr_replace($val1, "", -1);
-
-        $val1 .=")";
-
-        $vls[$i] = $val1;
-
-        $i++;
-
+            $i++;
         }
 
         $clname = substr_replace($clname, "", -1);
 
-        $clname .=")";
+        $clname .= ")";
 
-        $this-> sqlQuery .= $clname." VALUES";
+        $this->sqlQuery .= $clname . " VALUES";
 
         $k = 0;
 
         $cou = count($vls);
 
-        while($k<$cou){
+        while ($k < $cou) {
 
-        $this-> sqlQuery .= $vls[$k] .",";
+            $this->sqlQuery .= $vls[$k] . ",";
 
-        $k++;
-
+            $k++;
         }
 
-        $this -> sqlQuery = substr_replace($this -> sqlQuery, "", -1);
+        $this->sqlQuery = substr_replace($this->sqlQuery, "", -1);
 
-        $this -> sqlQuery = $this -> sqlQuery . $extra; 
+        $this->sqlQuery = $this->sqlQuery . $extra;
         // $myfile = fopen("myfileinsert.txt", "w") or die("Unable to open file!");
         // fwrite($myfile, $this -> sqlQuery."\n");
         // fclose($myfile);
-        mysqli_query($this ->connectionString , $this -> sqlQuery);
+        mysqli_query($this->connectionString, $this->sqlQuery);
         // $this -> sqlQuery = NULL;
-        return $this -> sqlQuery;
+        return $this->sqlQuery;
     }
 
-    function selectWhere($tableName,$rowName,$operator,$value,$valueType)   {
+    function selectWhere($tableName, $rowName, $operator, $value, $valueType)
+    {
 
-        $this -> sqlQuery = 'SELECT * FROM '.$tableName.' WHERE '.$rowName.' '.$operator.' ';
+        $this->sqlQuery = 'SELECT * FROM ' . $tableName . ' WHERE ' . $rowName . ' ' . $operator . ' ';
 
-        if($valueType == 'int') {
+        if ($valueType == 'int') {
 
-            $this -> sqlQuery .= $value;
+            $this->sqlQuery .= $value;
+        } else if ($valueType == 'char') {
 
+            $this->sqlQuery .= "'" . $value . "'";
         }
 
-        else if($valueType == 'char')   {
+        $this->dataSet = mysqli_query($this->connectionString, $this->sqlQuery);
 
-            $this -> sqlQuery .= "'".$value."'";
+        $this->sqlQuery = NULL;
 
-        }
-
-        $this -> dataSet = mysqli_query($this -> connectionString, $this -> sqlQuery);
-
-        $this -> sqlQuery = NULL;
-
-        return $this -> dataSet;
+        return $this->dataSet;
     }
 
-    
-    function selectFreeRun($query) {
-        $this -> dataSet = mysqli_query($this -> connectionString, $query);
-        return $this -> dataSet;
+
+    function selectFreeRun($query)
+    {
+        $this->dataSet = mysqli_query($this->connectionString, $query);
+        return $this->dataSet;
     }
 
 
 
-    function freeRun($query) {
+    function freeRun($query)
+    {
 
-        mysqli_query($this -> connectionString, $query);
+        mysqli_query($this->connectionString, $query);
 
-        return mysqli_insert_id($this -> connectionString);
+        return mysqli_insert_id($this->connectionString);
 
         // $last_inserted_id=$mysqli->insert_id; 
 
         // return $last_inserted_id;
     }
 
-    
+
 
     // function sendSMS($contact, $msg)
 
@@ -573,19 +549,26 @@ class Mysql extends Dbconfig {
     //     return $msg;
 
     // }
-    
-    function getIpAddr(){
-        if(!empty($_SERVER['HTTP_CLIENT_IP'])){
-            $ipAddr=$_SERVER['HTTP_CLIENT-IP'];
-        }elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])){
-            $ipAddr=$_SERVER['HTTP_X_FORWARDED_FOR'];
-        }else{
-            $ipAddr=$_SERVER['REMOTE_ADDR'];
+
+    function getIpAddr()
+    {
+        if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
+            $ipAddr = $_SERVER['HTTP_CLIENT-IP'];
+        } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+            $ipAddr = $_SERVER['HTTP_X_FORWARDED_FOR'];
+        } else {
+            $ipAddr = $_SERVER['REMOTE_ADDR'];
         }
         return $ipAddr;
     }
 
-    
+    // function test_input($data) {
+    //     $data = trim($data);
+    //     $data = stripslashes($data);
+    //     $data = htmlspecialchars($data);
+    //     return $data;
+    //   }
+
 }
 
 //Added this new code For LOGs
@@ -604,8 +587,33 @@ $referrer_url = !empty($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '/
 $user_agent = $_SERVER['HTTP_USER_AGENT'];
 
 // Insert visitor activity log into database 
-$sql ="insert into visitor_activity_logs(user_ip_address, user_agent, page_url, referrer_url) values   ('$user_ip_address','$user_agent','$user_current_url','$user_agent')";
-$insert = mysqli_query($mysql->dbConnect(),$sql);
+$sql = "insert into visitor_activity_logs(user_ip_address, user_agent, page_url, referrer_url) values   ('$user_ip_address','$user_agent','$user_current_url','$user_agent')";
+$insert = mysqli_query($mysql->dbConnect(), $sql);
 
 
-?> 
+
+function test_input($data)
+{
+    $mysql = new Mysql();
+    $mysql->dbConnect();
+
+    $data = mysqli_real_escape_string($mysql->dbConnect(), $_POST['name']);
+    $data = str_replace("'", '0', $_POST['name']);
+    return $data;
+}
+
+
+function Basic()
+{
+    $id = $_SESSION['wid'];
+    $mysql = new Mysql();
+    $mysql->dbConnect();
+    $query = "SELECT * FROM `tbl_user` WHERE `id`=" . $id;
+    $row =  $mysql->selectFreeRun($query);
+    $cntresult = mysqli_fetch_array($row);
+    $mysql->dbDisConnect();
+    $name = $cntresult['name'];
+    $contact = $cntresult['contact'];
+    $basic = "insert into subscription (full_name, mobile_no,plan) values ('$name','$contact','Basic')";
+   
+}

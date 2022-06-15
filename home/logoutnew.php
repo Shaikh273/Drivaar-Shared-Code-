@@ -15,5 +15,5 @@ session_unset();
 // mysqli_query($mysql->dbConnect(), "delete from visitor_activity_logs where user_ip_address='$user_ip_address'");
 //  session_unset($_SESSION['adt']);
 //  session_unset($_SESSION['load']);
-header("Location: login.php"); // Or wherever you want to redirect
+header("Location:  startpage/Drivaar.php"); // Or wherever you want to redirect
 ?>

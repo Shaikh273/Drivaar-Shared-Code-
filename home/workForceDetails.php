@@ -54,7 +54,7 @@ include 'DB/config.php';
 </head>
 
 <body class="skin-default-dark fixed-layout">
-<?php include('loader.php'); ?>
+<?php //include('loader.php'); ?>
 <div id="main-wrapper">
 <?php include('header.php'); ?>
    <div class="page-wrapper">

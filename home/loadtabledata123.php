@@ -2437,11 +2437,11 @@ else if (isset($_POST['action']) && $_POST['action'] == 'loaddepotTargettabledat
         } else if ($userresult['isactive'] == 1) {
             $statuscls = 'danger';
             $statusname = 'Inactive';
-            $isdisabled = disabled;
+            $isdisabled = "disabled";
         } else if ($userresult['isactive'] == 2) {
             $statuscls = 'info';
             $statusname = 'Onboarding';
-            $isdisabled = disabled;
+            $isdisabled = "disabled";
         }
 
 

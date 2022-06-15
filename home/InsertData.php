@@ -37,7 +37,7 @@ function getAlphaCode($n,$pad)
         } elseif($n > 26) {
             $dividend   = ($n);
             $alpha      = '';
-            $modulo;
+            $modulo     = "";
             while($dividend > 0){
                 $modulo     = ($dividend - 1) % 26;
                 $alpha      = $alphabet[$modulo].$alpha;
@@ -6094,7 +6094,7 @@ else if(isset($_POST['action']) && $_POST['action'] == 'rentalinsuranceupdate')
         }
         
         $sql = "SELECT * FROM `tbl_vehiclerental_agreement` WHERE id=$last_insert_id";
-        $fire = mysqli_query($mysql, $sql);
+        $fire = mysqli_query($mysql->dbConnect(), $sql);
         $fetch = mysqli_fetch_array($fire);
         $insurance = $fetch['insurance_type'];
    
