@@ -93,7 +93,7 @@ if (isset($_GET['set'])) {
         else {
             $total_count++;
             $rem_attm = 3 - $total_count;
-            $rem_attm1 = 5 - $total_count;
+            // $rem_attm1 = 5 - $total_count;
             if ($rem_attm == 0) {
                 $msg = "To many failed login attempts. Please login after 60 sec";
             } else {

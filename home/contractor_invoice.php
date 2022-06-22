@@ -15,7 +15,7 @@
         } elseif($n > 26) {
             $dividend   = ($n);
             $alpha      = '';
-            $modulo;
+            $modulo     = '';
             while($dividend > 0){
                 $modulo     = ($dividend - 1) % 26;
                 $alpha      = $alphabet[$modulo].$alpha;
@@ -24,6 +24,7 @@
         }
         return str_pad($alpha,$pad,"0",STR_PAD_LEFT);
     }
+
     $conid = 0;
     $hideHeader =0;
     $dueDate = "";
@@ -38,6 +39,7 @@
         $mysql -> dbConnect();
         $data = base64_decode($_GET['invkey']);
         $extDt = explode("#",$data);
+        
         if(count($extDt)==5)
         {
             $deco2 = base64_decode($extDt[4]);
@@ -53,85 +55,136 @@
                 header("Location: ../contractorAdmin/myinvoice.php");
             }
         }
-        $wkCode = getAlphaCode($extDt[2],2);
-        $yrCode = (int)$extDt[3] - 2020;
+
+        //changes
+        $conid = $extDt[0];
+        $cntqueryN = "SELECT c.*,d.invoicetype,ar.name as arname FROM `tbl_contractor` c 
+        LEFT JOIN `tbl_arrears` ar On ar.id=c.arrears 
+        INNER JOIN `tbl_depot`  d ON d.id=c.depot
+        WHERE c.id=".$extDt[0];
+        $cntrowN =  $mysql -> selectFreeRun($cntqueryN);
+        $result1N = mysqli_fetch_array($cntrowN);
+        if($result1N['invoicetype']>0)
+        {
+            $invoicetype = $result1N['invoicetype']; 
+        }
+        else
+        {
+            $invoicetype = 0;
+        }
+        $bank_name=$result1N['bank_name'];
+        $account_number=$result1N['account_number'];
+        $bank_account_name=$result1N['bank_account_name'];
+        $sort_code=$result1N['sort_code'];
+        if (isset($result1N['vat_number']) || !empty($result1N['vat_number'])) 
+        {
+            $vatset=1;
+        }
+        else
+        {
+            $vatset=0;
+        }
+
         $tcode='';
         if($extDt[1]==1)
         {
             $tcode='C';
         }
-        $conid = $extDt[0];
-        $cntqueryN = "SELECT c.*,ar.name as arname FROM `tbl_contractor` c LEFT JOIN `tbl_arrears` ar On ar.id=c.arrears WHERE c.id=".$extDt[0];
-        $cntrowN =  $mysql -> selectFreeRun($cntqueryN);
-        $result1N = mysqli_fetch_array($cntrowN);
         $depCode="";
         if($extDt[3]==2021)
         {
             $depCode = getAlphaCode($result1N['depot'],3);
         }
+        $yrCode = (int)$extDt[3] - 2020;
+        $wkCode = getAlphaCode($extDt[2],2);
         $invId = $yrCode.$tcode.$depCode.$wkCode.$extDt[0];
         $ginvID = $invId;
-        // echo "<script>alert('".$extDt[0]."---".$extDt[1]."---".$extDt[2]."---".$extDt[3]."----".$invId."');</script>";
-        $bank_name=$result1N['bank_name'];
-        $account_number=$result1N['account_number'];
-        $bank_account_name=$result1N['bank_account_name'];
-        $sort_code=$result1N['sort_code'];
-        $week_start = new DateTime();
-        $week_start->setISODate($extDt[3],$extDt[2]);
-        $wkStart = date('Y-m-d', strtotime('-1 day', strtotime($week_start->format('Y-m-d'))));
-        $wkEnd = date('Y-m-d', strtotime('+5 day', strtotime($week_start->format('Y-m-d'))));
-        $onUpdate = "";
-        if(isset($result1N['arname']) && $result1N['arname']!=NULL)
+        if($invoicetype==2)
         {
-            $arTemp = explode(" ",$result1N['arname'])[0];
-            $dueDate = date('Y-m-d', strtotime('+'.$arTemp.' week', strtotime($wkEnd)));
-            $onUpdate = ", duedate='$dueDate'";
-        }else
-        {
-            $onUpdate = "";
-        }
-        if (isset($result1N['vat_number']) || !empty($result1N['vat_number'])) 
-        {
-        	$vatset=1;
+            $setname = 'Month';
+            $setnumber = $extDt[2];
+            $tablename = 'tbl_monthlyinvoice';
+
+            $firstdayofmonth = date('Y-m-01', strtotime($extDt[3]-$extDt[2]-01));
+            $lastdayofmonth =  date('Y-m-t', strtotime($extDt[3]-$extDt[2]-01));
+            $onUpdate ="";
+            if(isset($statusresult['arname']) && $statusresult['arname']!=NULL)
+            {
+                $arTemp = explode(" ",$statusresult['arname'])[0];
+                $dueDate = date('Y-m-d', strtotime('+'.$arTemp.' week', strtotime($lastdayofmonth)));
+                $onUpdate = ", duedate='$dueDate'";
+            }else
+            {
+                $onUpdate = "";
+            }
+
+            $values = array();
+            $values[0]['cid']= $extDt[0];
+            $values[0]['invoice_no']= $invId;
+            $values[0]['month']= $extDt[2];
+            $values[0]['from_date']= $wkStart;
+            $values[0]['to_date']= $wkEnd;
+            $values[0]['weekyear']= $extDt[3];
+            $values[0]['vat']= $vatset;
+            $values[0]['monthyear']=$result1N['invoicetype'];
+            $values[0]['istype']= 1;
+            $values[0]['depot_id']= $result1N['depot'];
+            if($dueDate!="")
+            {
+                $values[0]['duedate']= $dueDate;
+            }
+            $mysql -> OnduplicateInsert('tbl_monthlyinvoice',$values,"ON DUPLICATE KEY UPDATE `invoice_no` = '$invId' $onUpdate");
         }
         else
         {
-        	$vatset=0;
+            $setname = 'Week';
+            $setnumber = $extDt[2];
+            $tablename = 'tbl_contractorinvoice';
+        
+            $week_start = new DateTime();
+            $week_start->setISODate($extDt[3],$extDt[2]);
+            $wkStart = date('Y-m-d', strtotime('-1 day', strtotime($week_start->format('Y-m-d'))));
+            $wkEnd = date('Y-m-d', strtotime('+5 day', strtotime($week_start->format('Y-m-d'))));
+            $onUpdate = "";
+            if(isset($result1N['arname']) && $result1N['arname']!=NULL)
+            {
+                $arTemp = explode(" ",$result1N['arname'])[0];
+                $dueDate = date('Y-m-d', strtotime('+'.$arTemp.' week', strtotime($wkEnd)));
+                $onUpdate = ", duedate='$dueDate'";
+            }else
+            {
+                $onUpdate = "";
+            }
+            
+            $values = array();
+            $values[0]['cid']= $extDt[0];
+            $values[0]['invoice_no']= $invId;
+            $values[0]['week_no']= $extDt[2];
+            $values[0]['from_date']= $wkStart;
+            $values[0]['to_date']= $wkEnd;
+            $values[0]['weekyear']= $extDt[3];
+            $values[0]['vat']= $vatset;
+            $values[0]['invoicetype']=$result1N['invoicetype'];
+            $values[0]['istype']= 1;
+            $values[0]['depot_id']= $result1N['depot'];
+            if($dueDate!="")
+            {
+                $values[0]['duedate']= $dueDate;
+            }
+            $mysql -> OnduplicateInsert('tbl_contractorinvoice',$values,"ON DUPLICATE KEY UPDATE `invoice_no` = '$invId' $onUpdate");
         }
-        $values = array();
-        $values[0]['cid']= $extDt[0];
-        $values[0]['invoice_no']= $invId;
-        $values[0]['week_no']= $extDt[2];
-        $values[0]['from_date']= $wkStart;
-        $values[0]['to_date']= $wkEnd;
-        $values[0]['weekyear']= $extDt[3];
-        $values[0]['vat']= $vatset;
-        $values[0]['istype']= 1;
-        $values[0]['depot_id']= $result1N['depot'];
-        if($dueDate!="")
-        {
-            $values[0]['duedate']= $dueDate;
-        }
-        $mysql -> OnduplicateInsert('tbl_contractorinvoice',$values,"ON DUPLICATE KEY UPDATE `invoice_no` = '$invId' $onUpdate");
-        $cntquery = "SELECT c.*,ci.* FROM `tbl_contractor` c INNER JOIN `tbl_contractorinvoice` ci ON ci.cid=c.id WHERE ci.invoice_no='$invId'";
+        $cntquery = "SELECT c.*,ci.*,ci.`insert_date` as insdt FROM `tbl_contractor` c INNER JOIN $tablename ci ON ci.cid=c.id WHERE ci.invoice_no='$invId'";
         $cntrow =  $mysql -> selectFreeRun($cntquery);
         $result1 = mysqli_fetch_array($cntrow);
         $mysql->dbDisconnect();
         $fromdate = date("d/m/Y",strtotime($result1['from_date']));
         $todate = date("d/m/Y",strtotime($result1['to_date']));
         $dueDate = date("d/m/Y",strtotime($result1['duedate']));
-        
+            
     }
     else
     {
-        if((isset($_SESSION['adt']) && $_SESSION['adt']==0))
-        {
-           header("location: login.php");
-        }
-        else
-        {
-           header("location: login.php");  
-        }
+        header("location: login.php");    
     }
 ?>
 <!DOCTYPE html>
@@ -1240,9 +1293,8 @@ if($hideHeader==0)
                                             </div>
 
                                             <div class="col-md-3 mt-3" style="text-align: right;">
-                                                    <span class='invoice-info-label lable-header'>Week:</span>
-                                                    <span class='invoice-info-label lable-header'><?php echo $result1['week_no'];?></span> 
-                                                   
+                                                    <span class='invoice-info-label lable-header'><?php echo $setname;?>:</span>
+                                                    <span class='invoice-info-label lable-header'><?php echo $setnumber;?></span>   
                                                     <br>
                                                     <span class='invoice-info-label'>Period:</span>
                                                     <span class='blue'><?php echo $fromdate.' - '.$todate;?></span><br>
@@ -1270,6 +1322,14 @@ if($hideHeader==0)
                                                                 <li><b><?php echo $result1['name'];?></b></li>
                                                                 <li><?php echo $result1['address']. "<br>" .$result1['street_address'] . "-" .$result1['postcode'] . "<br>" .$result1['city'] ." ".$result1['state'];?></li>
                                                                 <li>UTR: <?php echo $result1['utr'];?></li>
+                                                                <?php
+                                                                if($result1['vat_number'])
+                                                                {
+                                                                    ?>
+                                                                     <li>VAT: <?php echo $result1['vat_number'];?></li>
+                                                                    <?php
+                                                                }
+                                                                ?>
                                                                 <li>Phone: <?php echo $result1['contact'];?></li>
                                                                 <li>Email: <a href="<?php echo $result1['email'];?>"><?php echo $result1['email'];?></a></li>
                                                             </ul>
@@ -1309,7 +1369,10 @@ if($hideHeader==0)
                                                             <?php
                                                             $mysql = new Mysql();
                                                             $mysql -> dbConnect();
-                                                            $tblGetDept = "SELECT `tbl_depot`.`name`,`tbl_depot`.`reference`,`tbl_contractor`.`vat_number` FROM `tbl_contractor` INNER JOIN `tbl_depot` on `tbl_depot`.`id`=`tbl_contractor`.`depot` WHERE `tbl_contractor`.`id`=$conid";
+                                                            $tblGetDept = "SELECT `tbl_depot`.`name`,`tbl_depot`.`reference`,`tbl_contractor`.`vat_number` 
+                                                            FROM `tbl_contractor` 
+                                                            INNER JOIN `tbl_depot` on `tbl_depot`.`id`=`tbl_contractor`.`depot` 
+                                                            WHERE `tbl_contractor`.`id`=$conid";
                                                             $tblDeptRow1 =  $mysql -> selectFreeRun($tblGetDept);
                                                             $tblDeptRow = mysqli_fetch_array($tblDeptRow1);
                                                             $vatFlag = 0;
@@ -1321,11 +1384,18 @@ if($hideHeader==0)
                                                              // {
                                                              //    $vatFlag = 0;
                                                              // }
-                                                            $tblquery = "SELECT ci.`id`,ci.`week_no`,ci.`invoice_no`,ct.`rateid`,ct.`date`,ct.`value`,ct.`ischeckval`,ci.`vat` as civat,p.`name`,p.`type`,p.`amount`,p.`vat`,tdp.name as OTHDPT, tdp.reference as OTHDPTR, ct.othDepotId,ci.from_date,ci.to_date FROM `tbl_contractorinvoice` ci 
+                                                            $tblquery = "SELECT ci.`id`,ci.`invoice_no`,ct.`rateid`,ct.`date`,ct.`value`,
+                                                                ct.`ischeckval`,ci.`vat` as civat,p.`name`,p.`type`,p.`amount`,p.`vat`,tdp.name as OTHDPT, 
+                                                                tdp.reference as OTHDPTR, ct.othDepotId,ci.from_date,ci.to_date,
+                                                                (CASE WHEN (ct.othDepotId>0) THEN ct.othDepotId ELSE ci.depot_id END) as depotid 
+                                                                FROM $tablename ci 
                                                                 INNER JOIN `tbl_contractortimesheet` ct ON ct.cid=ci.cid 
                                                                 INNER JOIN `tbl_paymenttype` p ON p.`id`=ct.`rateid` 
-                                                                INNER JOIN `tbl_depot` tdp ON tdp.id=ct.othDepotId WHERE ci.`isdelete`=0 AND ci.`isactive`=0 AND ci.`invoice_no`='".$ginvID."' AND ct.`date` BETWEEN ci.`from_date` AND ci.`to_date` AND ct.`value` NOT LIKE '0' AND ct.`value` NOT LIKE '' AND ct.isdelete=0 ORDER BY p.`type` ASC, ct.`date` ASC,ct.`rateid` ASC";
-                                                                        //echo $tblquery;
+                                                                INNER JOIN `tbl_depot` tdp ON tdp.id=ct.othDepotId 
+                                                                WHERE ci.`isdelete`=0 AND ci.`isactive`=0 AND ci.`invoice_no`='".$ginvID."' 
+                                                                AND ct.`date` BETWEEN ci.`from_date` AND ci.`to_date` AND ct.`value` NOT LIKE '0' 
+                                                                AND ct.`value` NOT LIKE '' AND ct.isdelete=0 ORDER BY p.`type` ASC, ct.`date` ASC,ct.`rateid` ASC";
+                                                                       // echo $tblquery;
                                                             $tblrow =  $mysql -> selectFreeRun($tblquery);
                                                             $type=0;
                                                             $totalAttendance=0;
@@ -1344,21 +1414,24 @@ if($hideHeader==0)
                                                                 $vatFlag = $tblresult['civat'];
                                                                 $frm_Date = $tblresult['from_date'];
                                                                 $to_Date = $tblresult['to_date'];
+                                                                $dpt =  $mysql->selectWhere('tbl_depot', 'id', '=', $tblresult['depotid'], 'int');
+                                                                $dptresult = mysqli_fetch_array($dpt);
+                                                                $deptRef = $dptresult['reference'];
                                                                 if($tblresult['rateid']==0 && $tblresult['value']!=NULL && $tblresult['value']!='')
                                                                 {
                                                                     $route = " (".$tblresult['value'].")";
                                                                 }
                                                                 if($prvDate!=$tblresult['date'])
                                                                 {
-                                                                    if($tblresult['othDepotId']==1)
-                                                                    {
-                                                                        $deptName = $tblresult['OTHDPT'];
-                                                                        $deptRef = $tblresult['OTHDPTR'];
-                                                                    }else
-                                                                    {
-                                                                        $deptName = $tblDeptRow['name'];
-                                                                        $deptRef = $tblDeptRow['reference'];
-                                                                    }
+                                                                    // if($tblresult['othDepotId']>0)
+                                                                    // {
+                                                                    //     $deptName = $tblresult['OTHDPT'];
+                                                                    //     $deptRef = $tblresult['OTHDPTR'];
+                                                                    // }else
+                                                                    // {
+                                                                    //     $deptName = $tblDeptRow['name'];
+                                                                    //     $deptRef = $tblDeptRow['reference'];
+                                                                    // }
                                                                     $prvDate = $tblresult['date'];
                                                                     $vanDeduct[] = "'$prvDate' BETWEEN tav.`start_date` AND tav.`end_date`";
                                                                     $totalAttendance++;
@@ -1413,12 +1486,12 @@ if($hideHeader==0)
                                                                     <tr>
                                                                         <td><?php echo $tblresult['name'].' - <strong>'.$adddate."</strong> ".$route." <strong>".$deptRef."</strong>"; ?></td>
                                                                         <td><?php echo $tblresult['value']; ?></td>
-                                                                        <td><?php echo '£ '.$neg.$tblresult['amount']; ?></td>
-                                                                        <td><?php echo '£ '.$net; ?></td>
+                                                                        <td><?php echo 'Â£ '.$neg.$tblresult['amount']; ?></td>
+                                                                        <td><?php echo 'Â£ '.$net; ?></td>
                                                                         <?php if($vatFlag==1){ ?>
-                                                                            <td><?php echo '£ '.$vat; ?></td>
+                                                                            <td><?php echo 'Â£ '.$vat; ?></td>
                                                                         <?php }?>
-                                                                        <td><?php echo '£ '.$total; ?></td>
+                                                                        <td><?php echo 'Â£ '.$total; ?></td>
                                                                     </tr>
                                                                     <?php
                                                                     $finaltotal+=$total;
@@ -1463,12 +1536,12 @@ if($hideHeader==0)
                                                                     <tr>
                                                                         <td>Van deduction [<?php echo $tresultNE['registration_number']; ?>] <?php echo $vanDeduct;?></td>
                                                                         <td>1</td>
-                                                                        <td><?php echo '£ '.$net; ?></td>
-                                                                        <td><?php echo '£ '.$net; ?></td>
+                                                                        <td><?php echo 'Â£ '.$net; ?></td>
+                                                                        <td><?php echo 'Â£ '.$net; ?></td>
                                                                          <?php if($vatFlag==1){ ?>
-                                                                            <td><?php echo '£ '.$vat; ?></td>
+                                                                            <td><?php echo 'Â£ '.$vat; ?></td>
                                                                         <?php }?>
-                                                                        <td><?php echo '£ '.$total; ?></td>
+                                                                        <td><?php echo 'Â£ '.$total; ?></td>
                                                                     </tr>
                                                                         <?php
 
@@ -1522,12 +1595,12 @@ if($hideHeader==0)
                                                                     <tr>
                                                                         <td>Van deduction - <strong><?php echo $pikupD;?></strong> - [<?php echo $VehRentData['registration_number']; ?>]</td>
                                                                         <td>1</td>
-                                                                        <td><?php echo '£ '.$net; ?></td>
-                                                                        <td><?php echo '£ '.$net; ?></td>
+                                                                        <td><?php echo 'Â£ '.$net; ?></td>
+                                                                        <td><?php echo 'Â£ '.$net; ?></td>
                                                                         <?php if($vatFlag==1){ ?>
-                                                                            <td><?php echo '£ '.$vat; ?></td>
+                                                                            <td><?php echo 'Â£ '.$vat; ?></td>
                                                                         <?php }?>
-                                                                        <td><?php echo '£ '.$total; ?></td>
+                                                                        <td><?php echo 'Â£ '.$total; ?></td>
                                                                     </tr>
                                                                         <?php
 
@@ -1539,12 +1612,26 @@ if($hideHeader==0)
                                                                 }
                                                             
 
-
                                                             $paidamount=0;
                                                             $singleamount=0;
                                                             $resn = array();
                                                             $amnt123 = array();
-                                                            $tquery = "SELECT c.*,l.`amount` as totalamount,l.`no_of_instal`,c.reason FROM `tbl_contractorpayment` c INNER JOIN `tbl_contractorlend` l ON l.`id`=c.`loan_id` WHERE c.`cid`=".$result1['cid']." AND c.`week_no`=".$result1['week_no']." AND c.`isdelete`=0";
+                                                           // printf($loanweeks);
+                                                            if($invoicetype==2)
+                                                            {
+                                                                $number = $extDt[2];
+                                                                $number = str_pad($number, 2, '0', STR_PAD_LEFT);
+                                                                $loanweeks = $extDt[3].'-'.$number;
+                                                            }
+                                                            else
+                                                            {
+                                                                $loanweeks = $result1['week_no'];
+                                                            }
+                                                            $tquery = "SELECT c.*,l.`amount` as totalamount,l.`no_of_instal`,c.reason 
+                                                            FROM `tbl_contractorpayment` c 
+                                                            INNER JOIN `tbl_contractorlend` l ON l.`id`=c.`loan_id` WHERE c.`cid`=".$result1['cid']." 
+                                                            AND c.`week_no` IN ('".$loanweeks."') AND c.`isdelete`=0";
+                                                            //echo $tquery;
                                                             $trow =  $mysql -> selectFreeRun($tquery);
                                                             while($tresult = mysqli_fetch_array($trow))
                                                             {
@@ -1553,7 +1640,8 @@ if($hideHeader==0)
                                                                  $paidamount += $tresult['amount'];
                                                                  $singleamount += $tresult['totalamount']/$tresult['no_of_instal'];
                                                             }
-                                                            $totalamount = ($finaltotal-$paidamount);
+                                                            $lastamt = $finaltotal-$paidamount;
+                                                            $grtotalamount = round($lastamt,2);
                                                             $mysql -> dbDisConnect();
                                                             ?>
                                                         </tbody>
@@ -1576,9 +1664,9 @@ if($hideHeader==0)
                                                     </b>
                                                     </div>
                                                         <div class='col-sm-5 pull-right' style="text-align: right;">
-                                                            <span>NET :  £ <?php echo $totalnet;?></span><br>
-                                                            <span>VAT :  £ <?php echo $totalvat;?></span><br>
-                                                            <span>Total :  £ <?php echo $finaltotal;?></span><br>
+                                                            <span>NET :  Â£ <?php echo $totalnet;?></span><br>
+                                                            <span>VAT :  Â£ <?php echo $totalvat;?></span><br>
+                                                            <span>Total :  Â£ <?php echo $finaltotal;?></span><br>
                                                             <?php
                                                             if($paidamount>0)
                                                             {
@@ -1586,7 +1674,7 @@ if($hideHeader==0)
                                                                 while($resn[$i])
                                                                 {
                                                                 ?>
-                                                                  <span><?php echo $resn[$i];?> <br>: -£ <?php echo $amnt123[$i];?></span><br>
+                                                                  <span><?php echo $resn[$i];?> <br>: -Â£ <?php echo $amnt123[$i];?></span><br>
                                                                 <?php
                                                                 $i++;
                                                                 }
@@ -1596,8 +1684,9 @@ if($hideHeader==0)
                                                             <br>
 
                                                             <span><i>The VAT shown is your output tax due to HM Revenue & Customs</i></span><br><br>
+                                                           
                                                             <h4 class='pull-right'>
-                                                             <b>GROSS : <span class='green'>£ <?php echo $totalamount;?></b></span>
+                                                             <b>GROSS : <span class='green'>Â£ <?php echo $grtotalamount;?></b></span>
                                                             </h4>
                                                             <h4 class='pull-right'>
                                                              <b>Due Date : <span class=''><?php echo $dueDate;?></b></span>

@@ -9,7 +9,7 @@ class Dbconfig {
         $this -> serverName = 'localhost';
         $this -> userName = 'root';
         $this -> passCode = 'BRHL@Drivar!564';
-        $this -> dbName = 'var_db';
+        $this -> dbName = 'drivaar_db';
     }
 }
 ?>

@@ -65,7 +65,7 @@ function getAlphaCode($n,$pad){
         } elseif($n > 26) {
             $dividend   = ($n);
             $alpha      = '';
-            $modulo     = '';
+            $modulo     ='';
             while($dividend > 0){
                 $modulo     = ($dividend - 1) % 26;
                 $alpha      = $alphabet[$modulo].$alpha;
@@ -81,7 +81,6 @@ function WorkforceInvoiceTotal($id)
     $mysql->dbConnect();
     $cntquery = "SELECT c.*,ci.*,ci.cid as workforceid FROM `tbl_user` c 
     INNER JOIN `tbl_contractorinvoice` ci ON ci.cid=c.id WHERE ci.invoice_no='$id'";
-    // echo $cntquery;
     $cntrow =  $mysql->selectFreeRun($cntquery);
     $result1 = mysqli_fetch_array($cntrow);
     $totalamount = 0;
@@ -94,16 +93,15 @@ function WorkforceInvoiceTotal($id)
             WHERE ci.`isdelete`=0 AND ci.`isactive`=0 AND ci.`id`=" . $id . " ORDER BY p.`type` ASC";
     $tblrow =  $mysql->selectFreeRun($tblquery);
     $finaltotal = 0;
-    $totalnet = 0;
-    $totalvat = 0;
     while ($tblresult = mysqli_fetch_array($tblrow)) {
-        if(!empty($tblresult['vat_number1']))
-        {
-           $vatFlag = 1;
-        }else
-        {
-            $vatFlag = 0;
-        }
+        // if(!empty($tblresult['vat_number1']))
+        // {
+        //    $vatFlag = 1;
+        // }else
+        // {
+        //     $vatFlag = 0;
+        // }
+        $vatFlag = $tblresult['civat'];
         $type = $tblresult['type'];
         $net = $tblresult['amount'] * $tblresult['value'];
         $vat = 0;
@@ -122,8 +120,6 @@ function WorkforceInvoiceTotal($id)
 
     $paidamount = 0;
     $singleamount = 0;
-    $resn = array();
-    $amnt123 = array();
     $tquery = "SELECT c.*,l.`amount` as totalamount,l.`no_of_instal`,c.reason  
     FROM `tbl_workforcepayment` c INNER JOIN `tbl_workforcelend` l ON l.`id`=c.`loan_id` 
     WHERE c.`wid`=" . $result1['workforceid'] . " AND c.`week_no`=" . $result1['week_no'] . " AND c.`isdelete`=0";
@@ -291,6 +287,7 @@ else if (isset($_POST['action']) && $_POST['action'] == 'DepotUpdateData') {
     if ($userresult > 0) {
         $status = 1;
         $userdata['name'] = $userresult['name'];
+        $userdata['invoicetype'] = $userresult['invoicetype'];
         $userdata['supervisor'] = $userresult['supervisor'];
         $userdata['reference'] = $userresult['reference'];
         $userdata['isactive'] = $userresult['isactive'];
@@ -1367,7 +1364,8 @@ else if (isset($_POST['action']) && $_POST['action'] == 'DepotUpdateData') {
     }
     $response['status'] = $status;
     echo json_encode($response);
-} else if (isset($_POST['action']) && $_POST['action'] == 'VehicleExtraData') {
+}
+ else if (isset($_POST['action']) && $_POST['action'] == 'VehicleExtraData') {
 
     header("content-Type: application/json");
     $status = 0;
@@ -1394,7 +1392,37 @@ else if (isset($_POST['action']) && $_POST['action'] == 'DepotUpdateData') {
     $response['status'] = $status;
     $response['extraresult'] = $ext;
     echo json_encode($response);
-} else if (isset($_POST['action']) && $_POST['action'] == 'VehicleRenewalTypeUpdateData') {
+} 
+else if (isset($_POST['action']) && $_POST['action'] == 'WalletImagesData') {
+    $mysql = new Mysql();
+    $mysql->dbConnect();
+    $statusquery = "SELECT * FROM `tbl_contractorpayment` WHERE `id`=" . $_POST['id'];
+    $strow =  $mysql->selectFreeRun($statusquery);
+    $statusresult = mysqli_fetch_array($strow);
+    $options = explode(",", $statusresult['file']);
+    ?>
+    <table class='display nowrap table table-hover table-striped table-bordered'>
+        <thead>
+            <tr><th>Image</th><th>View</th></tr>
+        </thead>
+        <tbody>
+    <?php
+    if ($options) {
+        $status = 1;
+        for($i=0;$i<count($options);$i++)
+        {
+            echo "<tr><td>".$options[$i]."</td>
+                    <td><a target='_blank' href='http://drivaar.com/home/uploads/contractorwalletdocument/".$options[$i]."' class='adddata'>
+                    <i class='fas fa-eye fa-lg'></i></a>
+                    </td>
+                  </tr>";
+        }}
+    ?>
+    </tbody></table>
+    <?php
+    $mysql->dbDisConnect();
+} 
+else if (isset($_POST['action']) && $_POST['action'] == 'VehicleRenewalTypeUpdateData') {
 
     header("content-Type: application/json");
 
@@ -4134,14 +4162,16 @@ else if (isset($_POST['action']) && $_POST['action'] == 'AddVehicleExpenseUpdate
     $response['status'] = $status;
     $response['options'] = $options;
     echo json_encode($response);
-} else if (isset($_POST['action']) && $_POST['action'] == 'ShowContractorLendInfoDetails') {
+}  
+else if (isset($_POST['action']) && $_POST['action'] == 'ShowContractorLendInfoDetails') {
     header("content-Type: application/json");
     $status = 0;
     $mysql = new Mysql();
     $mysql->dbConnect();
     $id = $_POST['id'];
 
-    $rentquery = "SELECT *, DATE_FORMAT(`insert_date`,'%D %M%, %Y') as date1 FROM `tbl_contractorlend` WHERE `cid`=$id AND `isdelete`= 0 AND `isactive`= 0";
+    $rentquery = "SELECT *, DATE_FORMAT(`insert_date`,'%D %M%, %Y') as date1 
+    FROM `tbl_contractorlend` WHERE `cid`=$id AND `isdelete`= 0 AND `isactive`= 0";
 
     $rentrow =  $mysql->selectFreeRun($rentquery);
     $rowcount = mysqli_num_rows($rentrow);
@@ -4149,12 +4179,15 @@ else if (isset($_POST['action']) && $_POST['action'] == 'AddVehicleExpenseUpdate
         $status = 1;
         $data = array();
         while ($rentresult = mysqli_fetch_array($rentrow)) {
+            $lnqry = $mysql->selectFreeRun("SELECT SUM(amount) as loanamount FROM `tbl_contractorpayment` WHERE `loan_id`=".$rentresult['id']." AND `isdelete`=0");
+            $lnresult = mysqli_fetch_array($lnqry);
+            $remaining = $rentresult['amount']-$lnresult['loanamount'];
             $data[] = "<tr>";
             $data[] .= "<td> #" . $rentresult['id'] . "</td>";
-            $data[] .= "<td> £" . $rentresult['amount'] . "</td>";
+            $data[] .= "<td> Â£" . $rentresult['amount'] . "</td>";
             $data[] .= "<td>Generic</td>";
             $data[] .= "<td>" . $rentresult['reason'] . "</td>";
-            $data[] .= "<td></td>";
+            $data[] .= "<td>Pay : Â£".$lnresult['loanamount']."<br>Remaining : Â£".$remaining."</td>";
             $data[] .= "<td>" . $rentresult['date1'] . "</td>";
             $data[] .= "<td><a href='#' class='edit' onclick=\"editlendrow('" . $rentresult['id'] . "','" . $id . "')\"data-toggle='tooltip' title='Edit'><span><i class='fas fa-clock'></i></span></a></td></tr>";
         }
@@ -4167,7 +4200,8 @@ else if (isset($_POST['action']) && $_POST['action'] == 'AddVehicleExpenseUpdate
     $response['status'] = $status;
     $response['tbldata'] = $data;
     echo json_encode($response);
-} else if (isset($_POST['action']) && $_POST['action'] == 'ContractorLendUpdateData') {
+} 
+else if (isset($_POST['action']) && $_POST['action'] == 'ContractorLendUpdateData') {
 
     header("content-Type: application/json");
 
@@ -4192,6 +4226,8 @@ else if (isset($_POST['action']) && $_POST['action'] == 'AddVehicleExpenseUpdate
         $statusdata['time_interval'] = $statusresult['time_interval'];
         $statusdata['type'] = $statusresult['type'];
         $statusdata['week_of_payment'] = $statusresult['week_of_payment'];
+        //changes
+        $statusdata['month_of_payment'] = $statusresult['month_of_payment'];
         $statusdata['reason'] = $statusresult['reason'];
     }
 
@@ -4235,7 +4271,8 @@ else if (isset($_POST['action']) && $_POST['action'] == 'AddVehicleExpenseUpdate
             $file='';
             if(isset($rentresult['file']))
             {
-                $file='<a target="_blank" href="http://drivaar.com/home/uploads/contractorwalletdocument/'.$rentresult['file'].'" class="adddata"><i class="fas fa-eye fa-lg"></i></a>';
+                //$file='<a target="_blank" href="http://drivaar.com/home/uploads/contractorwalletdocument/'.$rentresult['file'].'" class="adddata"><i class="fas fa-eye fa-lg"></i></a>';
+                $file = '<a href="#" onclick=\'modelView("'.$rentresult['id'].'")\'>View</a>';
             }
             if((isset($_SESSION['permissioncode'][189]) && $_SESSION['permissioncode'][189]==1))
             {
@@ -4250,7 +4287,7 @@ else if (isset($_POST['action']) && $_POST['action'] == 'AddVehicleExpenseUpdate
             }
             $data[] = "<tr>
                         <td> #" . $rentresult['loan_id'] . "</td>
-                        <td> £" . $rentresult['amount'] . "</td>
+                        <td> Â£" . $rentresult['amount'] . "</td>
                         <td>" . $rentresult['reason'] . "</td>
                         <td>".$category."</td>
                         <td>Invoiced</td>
@@ -4284,7 +4321,7 @@ else if (isset($_POST['action']) && $_POST['action'] == 'AddVehicleExpenseUpdate
         while ($rentresult = mysqli_fetch_array($rentrow)) {
             $data[] = "<tr>";
             $data[] .= "<td> #" . $rentresult['id'] . "</td>";
-            $data[] .= "<td> £" . $rentresult['amount'] . "</td>";
+            $data[] .= "<td> Â£" . $rentresult['amount'] . "</td>";
             $data[] .= "<td>Generic</td>";
             $data[] .= "<td>" . $rentresult['reason'] . "</td>";
             $data[] .= "<td></td>";
@@ -4317,7 +4354,7 @@ else if (isset($_POST['action']) && $_POST['action'] == 'AddVehicleExpenseUpdate
         while ($rentresult = mysqli_fetch_array($rentrow)) {
             $data[] = "<tr>";
             $data[] .= "<td> #" . $rentresult['loan_id'] . "</td>";
-            $data[] .= "<td> £" . $rentresult['amount'] . "</td>";
+            $data[] .= "<td> Â£" . $rentresult['amount'] . "</td>";
             $data[] .= "<td>" . $rentresult['reason'] . "</td>";
             $data[] .= "<td>view</td>";
             $data[] .= "<td>Invoiced</td>";
@@ -4835,55 +4872,113 @@ else if (isset($_POST['action']) && $_POST['action'] == 'AddVehicleExpenseUpdate
     if (isset($_POST['wave'])) {
         $valus[0]['wave'] = $_POST['wave'];
     }
-$invId="";
+    $invId="";
     if($_POST['statusid']==1)
     {
-        $query = "SELECT c.depot,ar.name as arname,c.vat_number FROM `tbl_contractor` c LEFT JOIN `tbl_arrears` ar On ar.id=c.arrears WHERE c.id=".$_POST['cid'];
+        $query = "SELECT c.depot,d.invoicetype,ar.name as arname,c.vat_number 
+        FROM `tbl_contractor` c 
+        LEFT JOIN `tbl_arrears` ar On ar.id=c.arrears
+        INNER JOIN `tbl_depot`  d ON d.id=c.depot
+        WHERE c.id=".$_POST['cid'];
         $strow =  $mysql->selectFreeRun($query);
-        $statusresult = mysqli_fetch_array($strow);
-        $dueDate="";
-        $onUpdate ="";
-        $values[0]['vat']= 0;
-        if(isset($statusresult['arname']) && $statusresult['arname']!=NULL)
+        $statusresult = mysqli_fetch_array($strow); 
+        if($statusresult['invoicetype']==2)
         {
-            $arTemp = explode(" ",$statusresult['arname'])[0];
-            $dueDate = date('Y-m-d', strtotime('+'.$arTemp.' week', strtotime($_POST['enddate'])));
-            $onUpdate = ", duedate='$dueDate'";
-        }else
-        {
-            $onUpdate = "";
+            $firstdayofmonth = date('Y-m-01', strtotime($_POST['date']));
+            // Last day of the month.
+            $lastdayofmonth =  date('Y-m-t', strtotime($_POST['date']));
+            $dueDate="";
+            $onUpdate ="";
+            $values[0]['vat']=0;
+            if(isset($statusresult['arname']) && $statusresult['arname']!=NULL)
+            {
+                $arTemp = explode(" ",$statusresult['arname'])[0];
+                $dueDate = date('Y-m-d', strtotime('+'.$arTemp.' week', strtotime($lastdayofmonth)));
+                $onUpdate = ", duedate='$dueDate'";
+            }else
+            {
+                $onUpdate = "";
+            }
+            $month = date("m", strtotime($firstdayofmonth));
+            //$wkn++;
+            $wkCode = getAlphaCode($month,2);
+            $monthYear = date('Y',strtotime($firstdayofmonth));
+            $yrCode = (int)($monthYear) - 2020;
+            $tcode='C';
+            $depCode="";
+            if($monthYear==2021)
+            {
+                $depCode = getAlphaCode($statusresult['depot'],3);
+            }
+            $invId = $yrCode.$tcode.$depCode.$wkCode.$_POST['cid'];
+            $values = array();
+            $values[0]['cid']= $_POST['cid'];
+            $values[0]['invoicetype']=$statusresult['invoicetype'];
+            $values[0]['invoice_no']= $invId;
+            $values[0]['month']= $month;
+            if($statusresult['vat_number'])
+            {
+                $values[0]['vat']=1;
+            }
+            $values[0]['from_date']= $firstdayofmonth;
+            $values[0]['to_date']= $lastdayofmonth;
+            $values[0]['monthyear']= $monthYear;
+            $values[0]['istype']=1;
+            $values[0]['depot_id']= $statusresult['depot'];
+            if($dueDate!="")
+            {
+                $values[0]['duedate']= $dueDate;
+            }
+            $mysql -> OnduplicateInsert('tbl_monthlyinvoice',$values,"ON DUPLICATE KEY UPDATE `invoice_no` = '$invId' $onUpdate");
         }
-        
-        $wkn = date("W", strtotime($_POST['startdate'].' +1 day'));
-        //$wkn++;
-        $wkCode = getAlphaCode($wkn,2);
-        $wkYear = date('Y',strtotime($_POST['startdate']));
-        $yrCode = (int)($wkYear) - 2020;
-        $tcode='C';
-        $depCode="";
-        if($wkYear==2021)
+        else
         {
-            $depCode = getAlphaCode($statusresult['depot'],3);
+            
+            $dueDate="";
+            $onUpdate ="";
+            $values[0]['vat']= 0;
+            $values[0]['invoicetype']=$statusresult['invoicetype'];
+            if(isset($statusresult['arname']) && $statusresult['arname']!=NULL)
+            {
+                $arTemp = explode(" ",$statusresult['arname'])[0];
+                $dueDate = date('Y-m-d', strtotime('+'.$arTemp.' week', strtotime($_POST['enddate'])));
+                $onUpdate = ", duedate='$dueDate'";
+            }else
+            {
+                $onUpdate = "";
+            }
+            
+            $wkn = date("W", strtotime($_POST['startdate'].' +1 day'));
+            //$wkn++;
+            $wkCode = getAlphaCode($wkn,2);
+            $wkYear = date('Y',strtotime($_POST['startdate']));
+            $yrCode = (int)($wkYear) - 2020;
+            $tcode='C';
+            $depCode="";
+            if($wkYear==2021)
+            {
+                $depCode = getAlphaCode($statusresult['depot'],3);
+            }
+            $invId = $yrCode.$tcode.$depCode.$wkCode.$_POST['cid'];
+            $values = array();
+            $values[0]['cid']= $_POST['cid'];
+            $values[0]['invoice_no']= $invId;
+            $values[0]['week_no']= $wkn;
+            if($statusresult['vat_number'])
+            {
+                $values[0]['vat']=1;
+            }
+            $values[0]['from_date']= $_POST['startdate'];
+            $values[0]['to_date']= $_POST['enddate'];
+            $values[0]['weekyear']= $wkYear;
+            $values[0]['istype']=1;
+            $values[0]['depot_id']= $statusresult['depot'];
+            if($dueDate!="")
+            {
+                $values[0]['duedate']= $dueDate;
+            }
+            $mysql -> OnduplicateInsert('tbl_contractorinvoice',$values,"ON DUPLICATE KEY UPDATE `invoice_no` = '$invId' $onUpdate");
         }
-        $invId = $yrCode.$tcode.$depCode.$wkCode.$_POST['cid'];
-        $values = array();
-        $values[0]['cid']= $_POST['cid'];
-        $values[0]['invoice_no']= $invId;
-        $values[0]['week_no']= $wkn;
-        if($statusresult['vat_number'])
-        {
-            $values[0]['vat']=1;
-        }
-        $values[0]['from_date']= $_POST['startdate'];
-        $values[0]['to_date']= $_POST['enddate'];
-        $values[0]['weekyear']= $wkYear;
-        $values[0]['istype']=1;
-        $values[0]['depot_id']= $statusresult['depot'];
-        if($dueDate!="")
-        {
-            $values[0]['duedate']= $dueDate;
-        }
-        $mysql -> OnduplicateInsert('tbl_contractorinvoice',$values,"ON DUPLICATE KEY UPDATE `invoice_no` = '$invId' $onUpdate");
     }
     $valus[0]['date'] =  $dt;
     $startdate = $_POST['startdate'];
@@ -4922,7 +5017,6 @@ $invId="";
 
     if ($makeinsert) {
         //$dayoff = "SELECT * FROM `tbl_contractortimesheet` WHERE `status_id`=1 AND `cid`=".$_POST['cid']." AND `insert_date` BETWEEN '".$startdate."' AND '".$enddate."' ";
-
         $status = 1;
         $title = 'Insert';
         $message = 'Data has been inserted successfully.';
@@ -5034,7 +5128,7 @@ $invId="";
     $depStr = "`depotid` =" . $depotid;
     $cdepStr = "`depot` =" . $depotid;
     if ($depotid == '%') {
-        $disabled = "disabled";
+        $disabled = 'disabled';
         $depStr = "`depotid` LIKE '" . $depotid . "'";
         $cdepStr = "`depot` LIKE '" . $depotid . "'";
     } else {
@@ -5210,7 +5304,7 @@ $invId="";
         if ($strow) {
             $status = 1;
             while ($statusresult = mysqli_fetch_array($strow)) {
-                $options[] = "<option value=" . $statusresult['id'] . ">" . $statusresult['name'] . "(£" . $statusresult['amount'] . ")</option>";
+                $options[] = "<option value=" . $statusresult['id'] . ">" . $statusresult['name'] . "(Â£" . $statusresult['amount'] . ")</option>";
             }
         } else {
             $options[] = "<option value='0'>--</option>";
@@ -5349,15 +5443,15 @@ $invId="";
             if($paidFlag==1)
             {
                 $options .= '</td>
-                            <td class="text-right money" style="width: 80px">£' . $result["amount"] . '</td>
-                            <td class="text-right border-left money" style="width: 100px;" id=' . $uniqid . '>£' . $calamount . '</td>
+                            <td class="text-right money" style="width: 80px">Â£' . $result["amount"] . '</td>
+                            <td class="text-right border-left money" style="width: 100px;" id=' . $uniqid . '>Â£' . $calamount . '</td>
                             <td class=" border-left bg-red-100 text-center" style="padding: 8px 12px; width: 10px;"></td>
                         </tr>';
                     }else
                     {
                         $options .= '</td>
-                            <td class="text-right money" style="width: 80px">£' . $result["amount"] . '</td>
-                            <td class="text-right border-left money" style="width: 100px;" id=' . $uniqid . '>£' . $calamount . '</td>
+                            <td class="text-right money" style="width: 80px">Â£' . $result["amount"] . '</td>
+                            <td class="text-right border-left money" style="width: 100px;" id=' . $uniqid . '>Â£' . $calamount . '</td>
                             <td class=" border-left bg-red-100 text-center" style="padding: 8px 12px; width: 10px;">
                                 
                                 <a href="#" class="d-block" onclick="delPaymentType('.$result["id"].')"><span><i class="fas fa-trash-alt fa-lg"></i></span></a>
@@ -5368,7 +5462,7 @@ $invId="";
             
 
 
-            // $options[] = '<tr><td class="pl-3">'.$result["name"].'(£'.$result["amount"].')</td><td class="text-right"><button class="btn btn-light btn-sm border">AddPayment</button></td></tr>';
+            // $options[] = '<tr><td class="pl-3">'.$result["name"].'(Â£'.$result["amount"].')</td><td class="text-right"><button class="btn btn-light btn-sm border">AddPayment</button></td></tr>';
             }
         }
     }
@@ -5447,7 +5541,7 @@ $invId="";
     } else {
         ?>
         <tr>
-            <td colspan="14" class="text-center py-4">There are no waves set up for today. 😞</td>
+            <td colspan="14" class="text-center py-4">There are no waves set up for today. ðŸ˜ž</td>
         </tr>
         <?php
     }
@@ -6165,7 +6259,8 @@ else if (isset($_POST['action']) && $_POST['action'] == 'VehicleSetDriver') {
     $response['assigncnt2'] = $assigncnt_res2;
 
     echo json_encode($response);
-} else if (isset($_POST['action']) && $_POST['action'] == 'getechartdata') {
+} 
+else if (isset($_POST['action']) && $_POST['action'] == 'getechartdata') {
     $pendingarray = [];
     $approvedarray = [];
     $disputesarray = [];
@@ -6175,11 +6270,24 @@ else if (isset($_POST['action']) && $_POST['action'] == 'VehicleSetDriver') {
 
     header("content-Type: application/json");
     $userid = $_POST['userid'];
+    if($userid==1)
+    {
+        $uid='%';
+    }
+    else
+    {
+        $uid=$userid;
+    }
     $typeid = $_POST['typeid'];
 
     $mysql = new Mysql();
     $mysql->dbConnect();
-    $query = "SELECT IFNULL(COUNT(a.`id`),0) as cnt FROM tbl_contractorinvoice a INNER JOIN " . $table . " b ON b.`id` = a.`cid` WHERE a.`isdelete` = 0 AND YEAR(a.`insert_date`) = YEAR(CURRENT_DATE()) AND b.`userid` LIKE '" . $userid . "' AND a.istype =" . $typeid . " AND b.depot LIKE '" . $depot . "'";
+    $query = "SELECT IFNULL(COUNT(a.`id`),0) as cnt 
+    FROM tbl_contractorinvoice a 
+    INNER JOIN " . $table . " b ON b.`id` = a.`cid` 
+    WHERE a.`isdelete` = 0 AND YEAR(a.`insert_date`) = YEAR(CURRENT_DATE()) 
+    AND b.`userid` LIKE '" . $uid . "' AND a.istype =" . $typeid . " AND b.depot LIKE '" . $depot . "'";
+    //echo $query;
     for ($i = 1; $i <= 12; $i++) {
         $query1 = $query . " AND a.status_id = 1 AND MONTH(a.`insert_date`) = MONTH(STR_TO_DATE(" . $i . ", '%m'))";
         $row =  $mysql->selectFreeRun($query1);
@@ -6204,12 +6312,105 @@ else if (isset($_POST['action']) && $_POST['action'] == 'VehicleSetDriver') {
     $response['approved'] = $approvedarray;
     $response['disputes'] = $disputesarray;
     echo json_encode($response);
-} else if (isset($_POST['action']) && $_POST['action'] == 'getpaymentdata') {
+} 
+else if (isset($_POST['action']) && $_POST['action'] == 'getmonthwisecontractorinvoicedata') {
+    header("content-Type: application/json");
+   
+    $pendingarray = [];
+    $approvedarray = [];
+    $disputesarray = [];
+    $response = [];
+
+    $typeid = $_POST['typeid'];
+    $table = $_POST['table'];
+    $depot = $_POST['depot'];
+    $year = $_POST['year'];
+    $getmonth = $_POST['month'];
+    $userid = $_POST['userid'];
+    if($userid==1)
+    {
+        $uid='%';
+    }
+    else
+    {
+        $uid=$userid;
+    }
+    if($getmonth=='%')
+    {
+        $month='';
+    }
+    else
+    {
+        $month=" AND MONTH(a.`insert_date`) = MONTH(STR_TO_DATE(" . $getmonth . ", '%m'))";
+    }
+    
+    $mysql = new Mysql();
+    $mysql->dbConnect();
+
+    $query = "SELECT IFNULL(COUNT(a.`id`),0) as cnt 
+    FROM tbl_contractorinvoice a 
+    INNER JOIN " . $table . " b ON b.`id` = a.`cid` 
+    WHERE a.`isdelete` = 0 AND YEAR(a.`insert_date`) = ".$year . $month ." 
+    AND b.`userid` LIKE '" . $uid . "' AND a.istype =" . $typeid . " AND b.depot LIKE '" . $depot . "'";
+
+    $query1 = $query . " AND a.status_id = 1 ";
+    $row =  $mysql->selectFreeRun($query1);
+    $pending = mysqli_fetch_array($row);
+
+    $query2 = $query . " AND a.status_id = 2 ";
+    $row2 =  $mysql->selectFreeRun($query2);
+    $approved = mysqli_fetch_array($row2);
+
+    $query3 = $query . " AND a.status_id = 9 ";
+    $row3 =  $mysql->selectFreeRun($query3);
+    $disputes = mysqli_fetch_array($row3);
+
+    $query4 = $query . " AND a.status_id = 3";
+    $row4 =  $mysql->selectFreeRun($query4);
+    $hold = mysqli_fetch_array($row4);
+
+    $query5 = $query . " AND a.status_id = 4 ";
+    $row5 =  $mysql->selectFreeRun($query5);
+    $pay = mysqli_fetch_array($row5);
+
+    $query6 = $query . " AND a.status_id = 8";
+    $row3 =  $mysql->selectFreeRun($query6);
+    $send = mysqli_fetch_array($row3);
+
+    // $dataPoints = array( 
+    //     array("y"=>$hold['cnt'],"label"=>"Hold"),
+    //     array("y"=>$send['cnt'],"label"=>"Send"),
+    //     array("y"=>$pay['cnt'],"label"=>"Paid"),
+    //     array("y"=>$approved['cnt'],"label"=>"Approved"),
+    //     array("y"=>$pending['cnt'],"label"=>"Pending"),
+    //     array("y"=>$disputes['cnt'],"label"=>"Disputed")
+    // );
+    
+    $mysql->dbDisConnect();
+    $response['hold'] = $hold['cnt'];
+    $response['send'] = $send['cnt'];
+    $response['paid'] = $pay['cnt'];
+    $response['approved'] = $approved['cnt'];
+    $response['pending'] = $pending['cnt'];
+    $response['disputes'] = $disputes['cnt'];
+    echo json_encode($response);
+    // $data1 = json_encode($dataPoints, JSON_NUMERIC_CHECK);
+    // echo json_encode($dataPoints, JSON_NUMERIC_CHECK);
+} 
+else if (isset($_POST['action']) && $_POST['action'] == 'getpaymentdata') {
     $cntarray = [];
     $wfarray = [];
     $response = [];
     header("content-Type: application/json");
     $userid = $_POST['userid'];
+    if($userid==1)
+    {
+        $uid = '%';
+    }
+    else
+    {
+        $uid = $userid;
+    }
     $depot = $_POST['depot'];
     if ($_SESSION['userid'] == 1) {
         $qry = '';
@@ -6219,12 +6420,12 @@ else if (isset($_POST['action']) && $_POST['action'] == 'VehicleSetDriver') {
 
     $wfquery = "SELECT IFNULL(SUM(w.`amount`),0) FROM `tbl_workforcepayment` w 
                 INNER JOIN `tbl_user` u ON u.`id`=w.`wid`
-                INNER JOIN tbl_workforcedepotassign wo ON wo.`wid` LIKE ('" . $userid . "') AND wo.`isdelete`=0 AND wo.`isactive`=0 AND wo.`release_date` IS NULL
+                INNER JOIN tbl_workforcedepotassign wo ON wo.`wid` LIKE ('" . $uid . "') AND wo.`isdelete`=0 AND wo.`isactive`=0 AND wo.`release_date` IS NULL
                 WHERE  w.`isdelete`=0  " . $qry . " AND YEAR(w.`insert_date`) = YEAR(CURRENT_DATE()) AND u.depot LIKE '" . $depot . "'";
 
     $cntquery = "SELECT IFNULL(SUM(a.`amount`),0) FROM `tbl_contractorpayment` a  
                 INNER JOIN `tbl_contractor` b ON b.`id`=a.`cid` 
-                INNER JOIN tbl_workforcedepotassign w ON w.`wid` LIKE ('" . $userid . "') AND w.`isdelete`=0 AND w.`isactive`=0 AND w.`release_date` IS NULL AND b.`depot` IN (w.depot_id)
+                INNER JOIN tbl_workforcedepotassign w ON w.`wid` LIKE ('" . $uid . "') AND w.`isdelete`=0 AND w.`isactive`=0 AND w.`release_date` IS NULL AND b.`depot` IN (w.depot_id)
                 WHERE  a.`isdelete`=0 AND YEAR(a.`insert_date`) = YEAR(CURRENT_DATE()) AND b.depot LIKE '" . $depot . "'";
 
     $mysql = new Mysql();
@@ -7837,10 +8038,10 @@ else if (isset($_POST['action']) && $_POST['action'] == 'updategenerale_settingd
                     1. Sign In using <a href="http://drivaar.com/contractorAdmin/">http://drivaar.com/contractorAdmin/</a>. Make sure to save this email so that you can access this link later.Please verify login with this credentials. 
                                        <u><b><br>Username:</b></u>'.$email.' 
                                        <u><b><br>Password:</b></u>'.$password.'<br>
-                    2. If applicable, please provide the requested information for the required background check and motor vehicle report i.e., right to work, driver’s license, UTR number, NINO number and other relevant information. Please Note: You need to take photos to prove the accuracy of the details provided 
+                    2. If applicable, please provide the requested information for the required background check and motor vehicle report i.e., right to work, driverâ€™s license, UTR number, NINO number and other relevant information. Please Note: You need to take photos to prove the accuracy of the details provided 
                     </p>
                     <p>
-                        When you’ve completed these tasks, Drivaar will contact you with next steps. 
+                        When youâ€™ve completed these tasks, Drivaar will contact you with next steps. 
                     </p>
                     Sincerely,<br>
                     Bryanston Logistics<br> 
@@ -7966,10 +8167,10 @@ else if (isset($_POST['action']) && $_POST['action'] == 'updategenerale_settingd
                      </p>
                     </p>
                     1. Sign In using '.$userresult['email'].'. Make sure to save this email so that you can access this link later.<br>Set Your Drivaar Password <u>'.$link.'</u>.<br>
-                    2. If applicable, please provide the requested information for the required background check and motor vehicle report i.e., right to work, driver’s license, UTR number, NINO number and other relevant information. Please Note: You need to take photos to prove the accuracy of the details provided 
+                    2. If applicable, please provide the requested information for the required background check and motor vehicle report i.e., right to work, driverâ€™s license, UTR number, NINO number and other relevant information. Please Note: You need to take photos to prove the accuracy of the details provided 
                     </p>
                     <p>
-                        When you’ve completed these tasks, Drivaar will contact you with next steps. 
+                        When youâ€™ve completed these tasks, Drivaar will contact you with next steps. 
                     </p>
                     Sincerely,<br>
                     Bryanston Logistics<br> 
@@ -8273,17 +8474,28 @@ else if(isset($_POST['action']) && $_POST['action'] == 'NewScheduledataGet') {
 }else if(isset($_POST['action']) && $_POST['action'] == 'getInvcKey') {
     header("content-Type: application/json");
     $status = 0;
-    $wek_no = date('W', strtotime($_POST['cdate']));
-    if(date('l', strtotime($_POST['cdate'])) == 'Sunday')
+    //changes
+    if($_POST['invoicetype']==2)
     {
-        $wek_no = $wek_no + 1;
+        $setistype = $_POST['month'];
     }
+    else
+    {
+        $setistype = date('W', strtotime($_POST['cdate']));
+        if(date('l', strtotime($_POST['cdate'])) == 'Sunday')
+        {
+            $setistype = $setistype + 1;
+        }
+    }
+   // $wek_no = date('W', strtotime($_POST['cdate']));
+    
     $year_no = explode('-', $_POST['cdate'])[0];
     $cid = $_POST['id'];
-    $invc_key = base64_encode($cid."#1#".$wek_no."#".$year_no);
+    $invc_key = base64_encode($cid."#1#".$setistype."#".$year_no);
     $invc = new InvoiceAmountClass();
     $invcID = $invc->getInvoiceNo($cid,$_POST['cdate']);
     $total = $invc->ContractorInvoiceTotal($invcID);
+    $total = $total['finaltotal'];
     $res['status'] = 1;
     $res['invcKey'] = $invc_key;
     $res['weekTotal'] =$total;
@@ -8332,12 +8544,37 @@ else if(isset($_POST['action']) && $_POST['action'] == 'NewScheduledataGet') {
     $mysql = new Mysql();
     $mysql->dbConnect();
     $return_arr = array();
-    $sql = "SELECT i.`invoice_no`, i.`week_no`, DATE_FORMAT(i.`from_date`, '%d-%m-%Y') as from_date, DATE_FORMAT(i.`to_date`, '%d-%m-%Y') as to_date, i.`weekyear`, IF(i.`duedate` IS NULL,'NA',DATE_FORMAT(i.`duedate`, '%d-%m-%Y')) as duedate,c.name as cname, d.name as dname, is1.name as sname,IF(cc.name IS NULL,'NA',cc.name) as compName,IF(i.`vat`=0, 'NO', 'YES') as vatStatus,ROUND((getTimesheetTotal(i.`invoice_no`)-getVanDeduction(i.cid,i.from_date,i.to_date,i.`invoice_no`)-getLoanDedunction(i.cid,i.week_no)),3) as totalAmount FROM `tbl_contractorinvoice` i INNER JOIN `tbl_contractor` c ON c.id=i.cid INNER JOIN `tbl_depot` d ON d.id=i.depot_id INNER JOIN `tbl_invoicestatus` is1 ON is1.id=i.status_id LEFT JOIN `tbl_contractorcompany` cc ON cc.id=c.company WHERE i.`isdelete`=0 AND i.`week_no`=$wikNo AND i.`istype`=1 AND i.`weekyear` = $wikYear ".$extraquery;
+    $sql = "SELECT i.`invoice_no`, i.`week_no`, DATE_FORMAT(i.`from_date`, '%d-%m-%Y') as from_date, 
+    DATE_FORMAT(i.`to_date`, '%d-%m-%Y') as to_date, i.`weekyear`, 
+    IF(i.`duedate` IS NULL,'NA',DATE_FORMAT(i.`duedate`, '%d-%m-%Y')) as duedate,
+    c.name as cname,c.arrears,d.name as dname, is1.name as sname,IF(cc.name IS NULL,'NA',cc.name) as compName,
+    IF(i.`vat`=0, 'NO', 'YES') as vatStatus,
+    ROUND((getTimesheetTotal(i.`invoice_no`)-getVanDeduction(i.cid,i.from_date,i.to_date,i.`invoice_no`)
+    -getLoanDedunction(i.cid,i.week_no)),3) as totalAmount 
+    FROM `tbl_contractorinvoice` i 
+    INNER JOIN `tbl_contractor` c ON c.id=i.cid 
+    INNER JOIN `tbl_depot` d ON d.id=i.depot_id 
+    INNER JOIN `tbl_invoicestatus` is1 ON is1.id=i.status_id 
+    LEFT JOIN `tbl_contractorcompany` cc ON cc.id=c.company 
+    WHERE i.`isdelete`=0 AND i.`week_no`=$wikNo AND i.`istype`=1 AND i.`weekyear` = $wikYear ".$extraquery;
     $strow =  $mysql->selectFreeRun($sql);
     $dt="";
+    $totalshow = 0;
+    $$net  = 0;
+    $vatam = 0;
     while ($statusresult = mysqli_fetch_array($strow)) {
+
+        // $invc = new InvoiceAmountClass();
+        // $totalshow = $invc->ContractorInvoiceTotal($statusresult['invoice_no']);
+        // $totalshow = $totalshow['finaltotal'];
+        // $net = $totalshow['$totalnet'];
+        // $vatam = $totalshow['$totalvat'];
+
+
         $dt .= "<tr>
                 <td>".$statusresult['invoice_no']."</td>
+                <td>-</td>
+                <td>-</td>
                 <td>".$statusresult['totalAmount']."</td>
                 <td>".$statusresult['week_no']."</td>
                 <td>".$statusresult['from_date']."</td>
@@ -8349,6 +8586,7 @@ else if(isset($_POST['action']) && $_POST['action'] == 'NewScheduledataGet') {
                 <td>".$statusresult['dname']."</td>
                 <td>".$statusresult['sname']."</td>
                 <td>".$statusresult['vatStatus']."</td>
+                <td>".$statusresult['arrears']."</td>
                 </tr>";
     }
     $return_arr['status']=1;
@@ -8385,14 +8623,15 @@ else if (isset($_POST['action']) && $_POST['action'] == 'exportNewWorkforceInvoi
     $frm_Date = "";
     $to_Date = "";
     while ($tblresult = mysqli_fetch_array($tblrow)) {
-        if($tblresult['vat_number1']>0 || $tblresult['vat_number1'] != '')
-        {
-            $vatFlag = 1;
-        }
-        else
-        {
-            $vatFlag = 0;
-        }
+        // if($tblresult['vat_number1']>0 || $tblresult['vat_number1'] != '')
+        // {
+        //     $vatFlag = 1;
+        // }
+        // else
+        // {
+        //     $vatFlag = 0;
+        // }
+        $vatFlag = $tblresult['civat'];
         $frm_Date = $tblresult['from_date'];
         $to_Date = $tblresult['to_date'];
         if(!empty($_POST['duedate']))
@@ -8438,18 +8677,18 @@ else if (isset($_POST['action']) && $_POST['action'] == 'exportNewWorkforceInvoi
                     <td><b>Wk".$tblresult['week_no']."</b> - <small>" .$adddate. "</small></td>
                     <td>".$tblresult['name']."</td>
                     <td>".$tblresult['value']."</td>
-                    <td>£ ".$neg.$tblresult['amount']."</td>
+                    <td>Â£ ".$neg.$tblresult['amount']."</td>
                     <td>";
                     if($vatFlag==1)
                     {
-                        $dt .="£ ".$vat;
+                        $dt .="Â£ ".$vat;
                     }
                     else
                     {
                         $dt .="-";
                     }
             $dt .= "</td>
-                    <td>£ ".$total."</td>
+                    <td>Â£ ".$total."</td>
                     <td>".$dueDate."</td>
                     <td>".$tblresult['statusname']."</td>
                     </tr>";
@@ -8458,6 +8697,271 @@ else if (isset($_POST['action']) && $_POST['action'] == 'exportNewWorkforceInvoi
     }
     $return_arr['status']=1;
     $return_arr['dt']=$dt;
+    $mysql->dbDisConnect();
+    echo json_encode($return_arr);
+}
+else if (isset($_POST['action']) && $_POST['action'] == 'loanReportData') 
+{
+    header("content-Type: application/json");
+    $depotid = $_POST['did'];
+    $statusid = $_POST['statusid'];
+    $isloanid = $_POST['isloanid'];
+
+    $mysql = new Mysql();
+    $mysql->dbConnect();
+    $return_arr = array();
+
+    if ($_SESSION['userid'] == 1) {
+        $userid = '%';
+    } else {
+        $userid = $_SESSION['userid'];
+    }
+
+    $query = "SELECT * FROM (SELECT 'Contractor' as type, b.`name` AS name,b.`isactive`,COALESCE(SUM(a.`amount`),0) as totalamount,
+    (SELECT COALESCE(SUM(`amount`),0) FROM `tbl_contractorpayment` 
+    WHERE `isdelete`=0  AND cid = a.`cid`) as paidamount,
+    CASE
+    WHEN (COALESCE(SUM(a.`amount`),0)=(SELECT COALESCE(SUM(`amount`),0) FROM `tbl_contractorpayment` 
+    WHERE `isdelete`=0  AND cid = a.`cid`)) THEN '0'
+    ELSE '1'
+	END AS isstatus
+    FROM `tbl_contractorlend` a 
+    INNER join tbl_contractor b WHERE a.`cid` = b.`id` AND b.`isdelete` = 0 AND a.`isdelete` = 0 
+    AND b.`userid` LIKE ('" . $userid . "') AND b.`depot` LIKE ('" . $depotid . "') AND b.`isactive` LIKE ('" . $statusid . "')  GROUP BY a.cid 
+    UNION 
+    SELECT 'Workforce' as type, b.name AS name,b.isactive,COALESCE(SUM(a.`amount`),0) as totalamount,
+    (SELECT COALESCE(SUM(`amount`),0) FROM `tbl_workforcepayment` 
+    WHERE `isdelete`=0  AND wid = a.wid) as paidamount,
+                CASE
+    WHEN (COALESCE(SUM(a.`amount`),0)=(SELECT COALESCE(SUM(`amount`),0) FROM `tbl_workforcepayment` 
+    WHERE `isdelete`=0  AND wid = a.wid)) THEN '0'
+    ELSE '1'
+	END AS isstatus FROM `tbl_workforcelend` a 
+    INNER join tbl_user b WHERE a.wid = b.id AND b.isdelete = 0 AND a.isdelete = 0 
+    AND b.userid LIKE ('" . $userid . "') AND b.`depot` LIKE ('" . $depotid . "') AND b.`isactive` LIKE ('" . $statusid . "') GROUP BY a.wid ) as tbl WHERE tbl.isstatus LIKE ('".$isloanid."') order by tbl.type asc, tbl.name asc ";
+    $tblrow =  $mysql->selectFreeRun($query);
+    while ($tblresult = mysqli_fetch_array($tblrow)) 
+    {
+        $remain = $tblresult['totalamount'] - $tblresult['paidamount'];
+        $dt .= "<tr>
+                <td>".$tblresult['type']."</td>
+                <td>".$tblresult['name']."</td>
+                <td>Â£ ".$remain."</td>
+                </tr>";
+    }
+
+    $return_arr['status']=1;
+    $return_arr['dt']=$dt;
+    $mysql->dbDisConnect();
+    echo json_encode($return_arr);
+}
+else if (isset($_POST['action']) && $_POST['action'] == 'exportNewContractorInvoiceTableData') 
+{
+    header("content-Type: application/json");
+    $cid = $_POST['cid'];
+    $extraquery = "";
+    $mysql = new Mysql();
+    $mysql->dbConnect();
+    $return_arr = array();
+
+    $sql = "SELECT w.*,i.name as statusname,c.`invoice_no`,w.date,c.`week_no`,c.`status_id`,IF(c.`duedate` IS NULL,'NA',DATE_FORMAT(c.`duedate`, '%d-%m-%Y')) as duedate,c.`weekyear`,c.`vat` as civat,
+    p.`name`,p.`type`,p.`amount`,p.`vat`,d.`name` as dname   
+    FROM `tbl_contractorinvoice`  c 
+    INNER JOIN `tbl_contractortimesheet` w ON w.`cid`=c.`cid` AND w.`isdelete`=0 AND w.`isactive`=0 AND w.`date` BETWEEN c.`from_date` AND c.`to_date` AND w.`value` NOT LIKE '0' AND w.`value` NOT LIKE ''
+    INNER JOIN `tbl_paymenttype` p ON p.`id`=w.`rateid`
+    INNER JOIN `tbl_contractor` u ON u.`id`=c.`cid` 
+    INNER JOIN `tbl_depot` d ON d.`id`=c.`depot_id`
+    INNER JOIN `tbl_invoicestatus` i ON i.id=c.status_id
+    WHERE c.`istype`=1 AND c.cid=".$cid." AND c.isdelete=0 AND c.isactive=0".$extraquery;
+
+    $tblrow =  $mysql->selectFreeRun($sql);
+    $dt="";
+    $type = 0;
+    $finaltotal = 0;
+    $totalnet = 0;
+    $totalvat = 0;
+    $totalAttendance = 0;
+    $route = "";
+    $prvDate = "";
+    $vanDeduct = array();
+    $frm_Date = "";
+    $to_Date = "";
+    while ($tblresult = mysqli_fetch_array($tblrow)) {
+        $vatFlag = $tblresult['civat'];
+        $frm_Date = $tblresult['from_date'];
+        $to_Date = $tblresult['to_date'];
+        // if(!empty($_POST['duedate']))
+        // {
+        //     $dueDate = date("d/m/Y", strtotime($tblresult['duedate']));
+        // }
+        // else
+        // {
+        //     $dueDate = "NA";
+        // }
+        
+        if ($tblresult['rateid'] == 0 && $tblresult['value'] != NULL && $tblresult['value'] != ''){
+            $route = " (" . $tblresult['value'] . ")";
+        }
+
+        if($prvDate!=$tblresult['date'])
+        {
+            $prvDate = $tblresult['date'];
+            $vanDeduct[] = "'$prvDate' BETWEEN tav.`start_date` AND tav.`end_date`";
+        }
+
+        if ($tblresult['rateid'] > 0 && $tblresult['value'] != NULL && $tblresult['value'] != '') 
+        {
+            $adddate = date("d/m/Y", strtotime($tblresult['date']));
+            $type = $tblresult['type'];
+            if ($type == 1) {
+                $typename = 'STANDARD SERVICES';
+            } else if ($type == 2) {
+                $typename = 'BONUS';
+            } else if ($type == 3) {
+                $typename = 'DEDUCTION';
+            }
+
+            $net = $tblresult['amount'] * $tblresult['value'];
+            $vat = 0;
+            if ($vatFlag == 1) {
+                $vat = ($net * $tblresult['vat']) / 100;
+            }
+            $neg = "";
+            if ($type == 3) {
+                $net = -$net;
+                $vat = -$vat;
+                $neg = "-";
+            }
+            $total = $net + $vat;
+            $dt .= "<tr>
+                    <td>".$tblresult['invoice_no']."</td>
+                    <td>".$tblresult['dname']."</td>
+                    <td>".$typename."</td>
+                    <td><b>Wk".$tblresult['week_no']."</b> - <small>" .$adddate. "</small></td>
+                    <td>".$tblresult['name']."</td>
+                    <td>".$tblresult['value']."</td>
+                    <td>Â£ ".$neg.$tblresult['amount']."</td>
+                    <td>";
+                    if($vatFlag==1)
+                    {
+                        $dt .="Â£ ".$vat;
+                    }
+                    else
+                    {
+                        $dt .="-";
+                    }
+            $dt .= "</td>
+                    <td>Â£ ".$total."</td>
+                    <td>".$tblresult['duedate']."</td>
+                    <td>".$tblresult['statusname']."</td>
+                    </tr>";
+
+        }
+    }
+
+    // $week_array = getStartAndEndDate($wikNo,$wikYear);
+	// $frm_Date = $week_array['week_start'];
+	// $to_Date = $week_array['week_end'];
+
+    // $mysql = new Mysql();
+    // $mysql->dbConnect();
+    // $vanWher = implode(" OR ",$vanDeduct);
+    // $tqueryNE = "SELECT tav.*,tv.registration_number,i.name as statusname 
+    // FROM `tbl_assignvehicle` tav 
+    // INNER JOIN `tbl_contractorinvoice` c ON c.cid=tav.driver AND c.`istype`=1 
+    // INNER JOIN `tbl_invoicestatus` i ON i.id=c.status_id 
+    // INNER JOIN `tbl_vehicles` tv ON tv.id=tav.vid 
+    // WHERE ($vanWher) AND tav.isdelete=0 AND tav.driver=".$cid." 
+    // ORDER BY tav.`start_date` ASC";
+    // //echo $tqueryNE;
+    // $trowNE =  $mysql -> selectFreeRun($tqueryNE);
+    // $vatFlag = 0;
+    // $rvDate1="";
+    // $dt1="";
+    // $route1='';
+
+    $mysql = new Mysql();
+    $mysql->dbConnect();
+    $sql1 = "SELECT w.*,c.`week_no`,c.`weekyear`  
+    FROM `tbl_contractorinvoice`  c 
+    INNER JOIN `tbl_contractortimesheet` w ON w.`cid`=c.`cid` AND w.`isdelete`=0 AND w.`isactive`=0 AND w.`date` BETWEEN c.`from_date` AND c.`to_date` AND w.`value` NOT LIKE '0' AND w.`value` NOT LIKE ''
+    WHERE c.`istype`=1 AND c.cid=".$cid." AND c.isdelete=0 AND c.isactive=0";
+    $tblrow1 =  $mysql->selectFreeRun($sql1);
+    while ($tblresult1 = mysqli_fetch_array($tblrow1))
+    {
+        $weekno = $tblresult1['week_no'];
+        $weekyear = $tblresult1['weekyear'];
+        $week_array = getStartAndEndDate($weekno,$weekyear);
+	    $frm_Date = $week_array['week_start'];
+	    $to_Date = $week_array['week_end'];
+        $VehRentQry = "SELECT DISTINCT va.*, i.`week_no`,v.`registration_number`,i.`invoice_no`,i.`vat` as civat,c.`name` as username,IF(i.`duedate` IS NULL,'NA',DATE_FORMAT(i.`duedate`, '%d-%m-%Y')) as duedate,is1.`name` as sname,d.`name` as dname
+        FROM `tbl_contractorinvoice` i
+        INNER JOIN `tbl_contractor` c ON c.`id`=i.`cid`
+        INNER JOIN `tbl_depot` d ON d.`id`=i.`depot_id`
+        INNER JOIN `tbl_vehiclerental_agreement` va ON va.`driver_id`=c.`id` AND (va.`pickup_date` BETWEEN '$frm_Date' AND '$to_Date' OR va.`return_date` BETWEEN '$frm_Date' AND '$to_Date' OR '$frm_Date' BETWEEN va.`pickup_date` AND va.`return_date` OR '$to_Date' BETWEEN va.`pickup_date` AND va.`return_date`) AND va.`iscompalete`=1 AND va.`isdelete`=0 
+        INNER JOIN `tbl_vehicles` v ON v.`id`=va.`vehicle_id` AND v.`supplier_id`>1 
+        INNER JOIN `tbl_invoicestatus` is1 ON is1.`id`=i.`status_id`
+        WHERE i.`isdelete`=0 AND i.`week_no`=$weekno AND i.`cid`=".$cid." AND i.`istype`=1 AND i.`weekyear` = $weekyear ".$extraquery; 
+        $VehRentFire =  $mysql -> selectFreeRun($VehRentQry);
+        $vatFlag = 0;
+        $rvDate1="";
+        $dt1="";
+        $route1='';
+        while($VehRentData = mysqli_fetch_array($VehRentFire))
+        {
+            $vatFlag = $VehRentData['civat'];
+            $pikupD = $VehRentData['pickup_date'];
+            if($tblresult['rateid']==0 && $tblresult['value']!=NULL && $tblresult['value']!='' && $tblresult['routedate']==$tblresult['date'])
+            {
+                $route1 = " (".$tblresult['value'].")";
+            }
+            
+            if(strtotime($VehRentData['pickup_date'])<strtotime($frm_Date))
+            {
+                $pikupD = $frm_Date;
+            }
+            $i=0;
+            while($to_Date>=$pikupD && $pikupD<=$VehRentData['return_date'] && $pikupD<=date("Y-m-d"))
+            {
+                $net = -$VehRentData['price_per_day'];
+                $vat=0;
+                if($vatFlag==1){ 
+                 $vat = -$VehRentData['price_per_day'] * 0.2;
+                }
+                
+                $total = $net + $vat;
+                $pikupD1 = date("d/m/Y",strtotime($pikupD));
+                $dt1 .= "<tr>
+                        <td>".$VehRentData['invoice_no']."</td>
+                        <td>".$VehRentData['dname']."</td>
+                        <td>DEDUCTION</td>
+                        <td><b>Wk ".$VehRentData['week_no']."-<small>" .$pikupD1. "</small></td>
+                        <td>Van Deduction ( ".$VehRentData['registration_number']." )</td>
+                        <td>1</td>
+                        <td>".$net."</td>
+                        <td>";
+                        if($vatFlag==1)
+                        {
+                            $dt1 .=$vat;
+                        }
+                        else
+                        {
+                            $dt1 .="-";
+                        }
+                $dt1 .= "</td>
+                        <td>".$total."</td>
+                        <td>".$VehRentData['duedate']."</td>
+                        <td>".$VehRentData['sname']."</td>
+                        </tr>";
+                 $pikupD = date('Y-m-d', strtotime($pikupD . ' +1 day'));
+                 $i++;
+            }
+        }
+    }
+
+
+    $return_arr['status']=1;
+    $return_arr['dt']=$dt.$dt1;
     $mysql->dbDisConnect();
     echo json_encode($return_arr);
 }
@@ -8520,13 +9024,14 @@ else if (isset($_POST['action']) && $_POST['action'] == 'exportworkforceDetailsI
     $frm_Date = "";
     $to_Date = "";
     while ($tblresult = mysqli_fetch_array($tblrow)) {
-        if(!empty($tblresult['vat_number1']))
-        {
-           $vatFlag = 1;
-        }else
-        {
-            $vatFlag = 0;
-        }
+        // if(!empty($tblresult['vat_number1']))
+        // {
+        //    $vatFlag = 1;
+        // }else
+        // {
+        //     $vatFlag = 0;
+        // }
+        $vatFlag = $tblresult['civat'];
         //$dueDate = date("d/m/Y", strtotime($tblresult['duedate']));
         if ($tblresult['rateid'] == 0 && $tblresult['value'] != NULL && $tblresult['value'] != '' && $tblresult['date']==$tblresult['routedate']) 
         {
@@ -8627,7 +9132,7 @@ else if (isset($_POST['action']) && $_POST['action'] == 'exportworkforceInvoiceT
     $mysql->dbConnect();
     $return_arr = array();
     $sql = "SELECT i.`invoice_no`, i.`week_no`, DATE_FORMAT(i.`from_date`, '%d-%m-%Y') as from_date,i.id, 
-    DATE_FORMAT(i.`to_date`, '%d-%m-%Y') as to_date, i.`weekyear`, 
+    DATE_FORMAT(i.`to_date`, '%d-%m-%Y') as to_date, i.`weekyear`,c.arrears,i.`vat` as civat, 
     IF(i.`duedate` IS NULL,'NA',DATE_FORMAT(i.`duedate`, '%d-%m-%Y')) as duedate,
     c.name as cname, d.name as dname, is1.name as sname,c.vat_number,
     IF(c.vat_number IS NULL, 'NO', 'YES') as vatStatus 
@@ -8642,7 +9147,7 @@ else if (isset($_POST['action']) && $_POST['action'] == 'exportworkforceInvoiceT
     while ($statusresult = mysqli_fetch_array($strow)) {
         $totalshow = WorkforceInvoiceTotal($statusresult['id']);
         $vat = 'NO';
-        if ($statusresult['vat_number']!='') {
+        if ($statusresult['civat']==1) {
             $vat = 'YES';
         }
         $dt .= "<tr>
@@ -8657,6 +9162,7 @@ else if (isset($_POST['action']) && $_POST['action'] == 'exportworkforceInvoiceT
                 <td>".$statusresult['dname']."</td>
                 <td>".$statusresult['sname']."</td>
                 <td>".$vat."</td>
+                <td>".$statusresult['arrears']."</td>
                 </tr>";
     }
     $return_arr['status']=1;
@@ -8710,7 +9216,7 @@ else if (isset($_POST['action']) && $_POST['action'] == 'loadWorkforceInvoicesta
 
 
         $dt .= "<tr>
-                <td><b>£ ".$totalshow."</b></td>
+                <td><b>Â£ ".$totalshow."</b></td>
                 <td><span class='label label-secondary' style='color: " . $typeresult['stcolor'] . ";background-color: " . $typeresult['bgcolor'] . "'><b>" . strtoupper($typeresult['statusname']) . "</b></span></td>
                 <td><b>Wk " .$typeresult['week_no']."</b> - <small>".$fromdate." >> ".$todate."</small></td>
                 <td>".$typeresult['invoice_no']."</td>
@@ -8760,6 +9266,7 @@ else if (isset($_POST['action']) && $_POST['action'] == 'loadContractorInvoicest
             $todate = date("d M, Y", strtotime($week_array['week_end']));
             $invc = new InvoiceAmountClass();
             $totalshow = $invc->ContractorInvoiceTotal($typeresult['invoice_no']);
+            $totalshow = $totalshow['finaltotal'];
             if ($typeresult['status_id'] == 4) 
             {
                 $due = 'Paid: ' . $typeresult['updatedate'];
@@ -8777,7 +9284,7 @@ else if (isset($_POST['action']) && $_POST['action'] == 'loadContractorInvoicest
                     &nbsp; <a href='#' class='edit' onclick=\"addstatus('" . $typeresult['id'] . "','" . $typeresult['status_id'] . "')\"><span><i class='fas fa-eye'></i></span></a>";
             
             $options[]= "<tr>
-                        <td><b>£ ".$totalshow."</b></td>
+                        <td><b>Â£ ".$totalshow."</b></td>
                         <td><span class='label label-secondary' style='color: " . $typeresult['stcolor'] . ";background-color: " . $typeresult['bgcolor'] . "'><b>" . strtoupper($typeresult['statusname']) . "</b></span></td>
                         <td><b>Wk " .$typeresult['week_no']."</b> - <small>".$fromdate." >> ".$todate."</small></td>
                         <td>".$typeresult['invoice_no']."</td>
@@ -9047,8 +9554,8 @@ else if (isset($_POST['action']) && $_POST['action'] == 'NewvalidateVat')
         $tdatavat = mysqli_fetch_array($typerow);
         if($tdatavat['status_id']!=4 || isset($_SESSION['permissioncode'][195]) && $_SESSION['permissioncode'][195]==1)
         {
-            //if($tdatavat['vat_number'] != "" && !empty($tdatavat['vat_number']) && $tdatavat['vat_number'] != NULL)
-            //{
+            if($tdatavat['vat_number'] != "" && !empty($tdatavat['vat_number']) && $tdatavat['vat_number'] != NULL)
+            {
                 if ($_POST['status'] == 0) 
                 {
                     $status = 1;
@@ -9069,11 +9576,11 @@ else if (isset($_POST['action']) && $_POST['action'] == 'NewvalidateVat')
                     $status = 1;
                 }
                 $status123=1;
-            //}
-            // else
-            // {
-            //     $mesg = "VAT number is not assigned !!!";
-            // }
+            }
+            else
+            {
+                $mesg = "VAT number is not assigned !!!";
+            }
         }
         else
         {
@@ -9085,6 +9592,61 @@ else if (isset($_POST['action']) && $_POST['action'] == 'NewvalidateVat')
     {
         $mesg="Permission Denied!!!";
     }
+    $response['status123'] = $status123;
+    $response['status'] = $status;
+    $response['mesg'] = $mesg;
+    echo json_encode($response);
+}
+else if (isset($_POST['action']) && $_POST['action'] == 'NewvalidateVatWorkforce') 
+{
+
+    header("content-Type: application/json");
+    $status = 0;
+    $status123 = 0;
+    $id = $_POST['id'];
+    $mesg = "";
+   
+    $mysql = new Mysql();
+    $mysql->dbConnect();
+    $query = "SELECT c.`id`,c.`vat_number`,ci.status_id FROM `tbl_user` c INNER JOIN tbl_contractorinvoice ci ON ci.cid=c.id WHERE ci.id=$id";
+    $typerow =  $mysql->selectFreeRun($query);
+    $tdatavat = mysqli_fetch_array($typerow);
+    if($tdatavat['status_id']!=4 )
+    {
+        if($tdatavat['vat_number'] != "" && !empty($tdatavat['vat_number']) && $tdatavat['vat_number'] != NULL)
+        {
+            if ($_POST['status'] == 0) 
+            {
+                $status = 1;
+            }
+            else
+            {
+                $status = 0;
+            }
+
+            $valus[0]['vat'] = $status;
+            $valus[0]['update_date'] = date('Y-m-d H:i:s');
+            
+
+            if ($id > 0) {
+                $isactivecol = array('vat', 'update_date');
+                $where = 'id =' . $id;
+                $isactiveupdate = $mysql->update('tbl_contractorinvoice', $valus, $isactivecol, 'update', $where);
+                $status = 1;
+            }
+            $status123=1;
+        }
+        else
+        {
+            $mesg = "VAT number is not assigned !!!";
+        }
+    }
+    else
+    {
+        $mesg = "Invoice is already Paid!!!";
+    }
+    $mysql->dbDisConnect();
+   
     $response['status123'] = $status123;
     $response['status'] = $status;
     $response['mesg'] = $mesg;

@@ -27,7 +27,8 @@ if (isset($_POST['basic'])) {
     $mysql->dbDisConnect();
     $name = $cntresult['name'];
     $contact = $cntresult['contact'];
-    $basic = "insert into `subscription` (`full_name`, `mobile_no`,`plan`) values ('$name','$contact','Basic')";
+    $email = $cntresult['email'];
+    $basic = "insert into `subscription` (`full_name`, `email`,`mobile_no`,`plan`) values ('$name','$email','$contact','Basic')";
     $result = mysqli_query($mysql->dbConnect(),$basic);
 }
 

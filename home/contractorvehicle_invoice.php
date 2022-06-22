@@ -1,4 +1,3 @@
-
 <?php
     $page_title="Contractor vehicle Invoice";
     include 'DB/config.php';

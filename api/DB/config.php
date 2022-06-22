@@ -431,7 +431,7 @@ class Mysql extends Dbconfig {
             if($i==0){
 
                 $clname .=  "`".$key."`,";
- 
+
             }
             if(is_int($val) == true){
 

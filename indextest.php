@@ -1,307 +1,602 @@
 <?php
-include 'home/DB/config.php';
-include 'home/base2n.php';
-// include_once 'home/DB/user_activity_log.php'; 
-date_default_timezone_set('Europe/London');
+$page_title = "Drivaar";
+include 'DB/config.php';
+$page_id = 40;
 if (!isset($_SESSION)) {
-   session_start();
+    session_start();
 }
-$mysql = new Mysql();
-$mysql->dbConnect();
+if ((isset($_SESSION['permissioncode']) && $_SESSION['permissioncode'][$page_id] == 1) || (isset($_SESSION['adt']) && $_SESSION['adt'] == 1)) {
+    $userid = $_SESSION['userid'];
+    if ($userid == 1) {
+        $uid = '%';
+    } else {
+        $uid = $userid;
+    }
+    if (isset($_POST['insert'])) {
+        $mysql = new Mysql();
+        $mysql->dbConnect();
+        $valus[0]['name'] = $_POST['name'];
+        $valus[0]['userid'] = $_POST['userid'];
+        // $valus[0]['invoicetype'] = $_POST['invoicetype'];
+        // $supervisorIds = implode(",", $_POST['supervisor']);
+        // $valus[0]['supervisor'] = $supervisorIds;
+        // $cat_result= array();
+        // $i = 0;
 
-if (isset($_GET['set'])) {
-   unset($_SESSION['load']);
-} else if (isset($_POST['loginsub'])) {
+        // foreach ($_POST['supervisor'] as $supervisorid) {
 
+        //     $category =  $mysql -> selectWhere('tbl_user','id','=',$supervisorid,'int');
 
-   // This checks whether the user already attempted to login before within an certain period of time.
-   $time = time() - 30;
-   $ip_address = $mysql->getIpAddr();
-   $check_login_row = mysqli_fetch_assoc(mysqli_query($mysql->dbConnect(), "select count(*) as total_count from user_attempts where try_time>$time and ip_address='$ip_address'"));
-   $total_count = $check_login_row['total_count'];
+        //     $catresult = mysqli_fetch_array($category);
 
+        //     $cat_result[] = $catresult['name'];
 
-   // String Validation
-   $user = mysqli_real_escape_string($mysql->dbConnect(),$_POST['user']);
-   $pass = mysqli_real_escape_string($mysql->dbConnect(), $_POST['pass']);
-   $userquery = "SELECT `tbl_user`.*,`tbl_permissioncheck`.`permissioncode` 
-    FROM `tbl_user` 
-    INNER JOIN `tbl_permissioncheck` ON `tbl_permissioncheck`.`role_id`=`tbl_user`.`roleid` 
-    WHERE (`tbl_user`.`email`='$user' OR `tbl_user`.`contact`='$user') 
-    AND `tbl_user`.`password`='$pass' AND `tbl_user`.`isdelete`=0 AND `tbl_permissioncheck`.`isdelete`=0";
-   $userrow = $mysql->selectFreeRun($userquery);
-   if ($row = mysqli_fetch_assoc($userrow)) {
+        //     $i++;
+        // }
 
-      $hourdiff = round((strtotime(date('Y-m-d H:i:s')) - strtotime($row['urldate'])) / 3600, 1);
-      if ($row['isactive'] == 0) {
-         if ($hourdiff <= 24) {
-            $binary = new Base2n(1);
-            $binarycode =  $row['permissioncode'];
-            if (isset($binarycode)) {
-               $prcode = $binary->encode($binarycode);
-               $permissioncode = str_split($prcode);
-               $_SESSION['permissioncode'] = $permissioncode;
-               $_SESSION['userid'] = $row['id'];
-               $_SESSION['profile'] = $row['file'];
-               $_SESSION['load'] = 1;
-               $_SESSION['adt'] = 1;
-               header("Location: home/index.php");
+        // $valus[0]['supervisor_type'] = implode(",", $cat_result);
+        $valus[0]['insert_date'] = date('Y-m-d H:i:s');
+
+        $depotinsert = $mysql->insertre('tbl_depot', $valus);
 
 
-               // Will clear IP address from the db
-               $_SESSION['IS_LOGIN'] = 'yes';
-               mysqli_query($mysql->dbConnect(), "delete from user_attempts where id='userid' && ip_address='$ip_address'");
-            } else {
-               $msg = "Permission can not give, Please verify your permission.";
-            }
-         } else if ($row['ispasswordchange'] == 1) {
-            $binary = new Base2n(1);
-            $binarycode =  $row['permissioncode'];
-            if (isset($binarycode)) {
-               $prcode = $binary->encode($binarycode);
-               $permissioncode = str_split($prcode);
-               $_SESSION['permissioncode'] = $permissioncode;
-               $_SESSION['userid'] = $row['id'];
-               $_SESSION['profile'] = $row['file'];
-               $_SESSION['load'] = 1;
-               $_SESSION['adt'] = 1;
-               header("Location: home/index.php");
+        if ($depotinsert) {
+            $dvalus[0]['userid'] = 1;
+            $dvalus[0]['wid'] = 1;
+            $dvalus[0]['depot_id'] = $depotinsert;
+            $dvalus[0]['uniqid'] = '1-' . $depotinsert;
+            $dvalus[0]['assign_date'] = date('Y-m-d H:i:s');
+            $dvalus[0]['insert_date'] = date('Y-m-d H:i:s');
 
+            $insert = $mysql->insert('tbl_workforcedepotassign', $dvalus);
 
-               // Clear IP Address from database
-               $_SESSION['IS_LOGIN'] = 'yes';
-               mysqli_query($mysql->dbConnect(), "delete from user_attempts where ip_address='$ip_address'");
-            } else {
-               $msg = "Permission can not give, Please verify your permission.";
-            }
-         } else {
-            $msg = "Your Credentials has been expired.Please contact to authorized person.";
-         }
-      } else {
-         $msg = "Your account has been blocked. Please contact to authorized person.";
-      }
-   }
+            echo "<script>myAlert('Insert @#@ Data has been inserted successfully.@#@success')</script>";
+        } else {
+            echo "<script>myAlert('Insert Error @#@ Data can not been inserted.@#@danger')</script>";
+        }
 
-   // login attempts counter
-   else {
-      if ($total_count == 3) {
-         $msg = "To many failed login attempts. Please login after 10 sec";
-      }
+        $mysql->dbDisConnect();
+    }
 
+    if (isset($_POST['update'])) {
+        $mysql = new Mysql();
+        $mysql->dbConnect();
 
-      // if the user is not able to login then this else condition will work
-      else {
-         $total_count++;
-         $rem_attm = 3 - $total_count;
-         // $rem_attm1 = 5 - $total_count;
-         if ($rem_attm == 0) {
-            $msg = "To many failed login attempts. Please login after 10 sec";
-         } else {
-            $try_time = time();
-            $con = "insert into user_attempts(ip_address,try_time) value('$ip_address','$try_time')";
-            $connection = $mysql->selectFreeRun($con);
-            $msg = "Wrong Credentials!!! UserId and/or Password entered by you is incorrect.<br/>$rem_attm attempts remaining";
-         }
-      }
-   }
+        $valus[0]['name'] = $_POST['name'];
+        // $valus[0]['invoicetype'] = $_POST['invoicetype'];
+        // $supervisorIds = implode(",", $_POST['supervisor']);
+        // $valus[0]['supervisor'] = $supervisorIds;
+
+        // $cat_result= array();
+        // $i = 0;
+
+        // foreach ($_POST['supervisor'] as $supervisorid) {
+
+        //     $category =  $mysql -> selectWhere('tbl_user','id','=',$supervisorid,'int');
+
+        //     $catresult = mysqli_fetch_array($category);
+
+        //     $cat_result[] = $catresult['name'];
+
+        //     $i++;
+
+        // }
+
+        // $valus[0]['supervisor_type'] = implode(",", $cat_result);
+        $valus[0]['update_date'] = date('Y-m-d H:i:s');
+
+        $usercol = array('name', 'update_date'); //'invoicetype'
+        $where = 'id =' . $_POST['id'];
+        $userupdate = $mysql->update('tbl_depot', $valus, $usercol, 'update', $where);
+
+        if ($userupdate) {
+            echo "<script>myAlert('Update @#@ Data has been updated successfully.@#@success')</script>";
+        } else {
+            echo "<script>myAlert('Update Error @#@ Data can not been updated.@#@danger')</script>";
+        }
+
+        $mysql->dbDisConnect();
+    }
+} else {
+    header("location: login.php");
 }
-
-
-// // This wil get the IP address of the user.
-// function getIpAddr()
-// {
-//    if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
-//       $ipAddr = $_SERVER['HTTP_CLIENT-IP'];
-//    } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-//       $ipAddr = $_SERVER['HTTP_X_FORWARDED_FOR'];
-//    } else {
-//       $ipAddr = $_SERVER['REMOTE_ADDR'];
-//    }
-//    return $ipAddr;
-// }
-
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-   <meta charset="utf-8">
-   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-   <meta name="viewport" content="width=device-width, initial-scale=1">
-   <meta name="description" content="">
-   <meta name="author" content="">
-   <!-- Favicon icon -->
-   <link rel="icon" type="image/png" sizes="16x16" href="./assets/images/favicon.png">
-   <link href="./assets/node_modules/sweetalert/sweetalert.css" rel="stylesheet" type="text/css">
-   <title>Login</title>
-   <link href="home/dist/css/pages/login-register-lock.css" rel="stylesheet">
-   <link href="home/dist/css/style.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=1024">
+    <title><?php echo $page_title; ?></title>
+    <?php include('head.php'); ?>
+    <link rel="stylesheet" href="countrycode/build/css/intlTelInput.css">
+    <link rel="stylesheet" href="countrycode/build/css/demo.css">
+
 </head>
 
-<body class="skin-default card-no-border">
-   <?php
-   include('home/loader.php');
-   ?>
-   <section id="wrapper">
-      <div class="login-register" style="background-image:url(./assets/images/background/login-register.jpg);">
-         <div class="login-box card">
-            <div class="card-body">
-               <form class="form-horizontal form-material" id="loginform" action="#" method="POST">
-                  <h3 class="text-center m-b-20">Log-in</h3>
-                  <?php if (@$msg) { ?>
-                     <div id="alert" class="alert alert-danger" role="alert">
-                        <span class="sr-only"></span>
-                        <?= $msg ?>
-                     </div>
-                  <?php    } ?>
-                  <div class="form-group ">
-                     <div class="col-xs-12">
-                        <input class="form-control" type="text" required="" placeholder="Username" name="user">
-                     </div>
-                  </div>
-                  <div class="form-group">
-                     <div class="col-xs-12">
-                        <input class="form-control" type="text" required="" placeholder="Password" name="pass">
-                     </div>
-                  </div>
-                  <div class="form-group row">
-                     <div class="col-md-12">
-                        <div class="d-flex no-block align-items-center">
-                           <div class="custom-control custom-checkbox">
-                           </div>
-                           <div class="ml-auto">
-                              <a href="javascript:void(0)" id="to-recover" class="text-muted"><i class="fas fa-lock m-r-5"></i> Forgot password?</a>
-                           </div>
+<body class="skin-default-dark fixed-layout">
+    <?php
+    include('loader.php');
+    ?>
+    <div id="main-wrapper">
+        <?php
+        include('header.php');
+        // include('menu.php');
+        ?>
+        <div class="page-wrapper">
+            <div class="container-fluid">
+                <main class="container-fluid  animated">
+                    <div class="card">
+                        <div class="card-header" style="background-color: rgb(255 236 230);">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="header">Depots</div>
+                                <div>
+
+                                    <button type="button" class="btn btn-primary" id="ViewDiv" onclick="ShowHideDiv(this.value);" value="view">Add Depot</button>
+
+                                    <button type="button" class="btn btn-primary" id="AddDiv" onclick="ShowHideDiv(this.value);" value="add">View Depot</button>
+
+                                </div>
+
+                            </div>
                         </div>
-                     </div>
-                  </div>
-                  <div class="form-group text-center">
+                        <div class="card-body" id="AddFormDiv">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <form method="post" id="depotForm" name="depotForm" action="">
+                                        <input type="hidden" name="id" id="id" value="">
+                                        <input type="hidden" name="userid" id="userid" value="<?php echo $userid ?>">
+                                        <div class="form-body">
+                                            <div class="row p-t-20">
+                                                <div class="col-md-4">
+                                                    <div class="form-group">
+                                                        <label class="control-label">Name *</label>
+                                                        <input type="text" id="name" name="name" class="form-control" placeholder="">
+                                                    </div>
+                                                </div>
+                                                <!-- <div class="col-md-6">
+                                            <label class="control-label">Create Invoice *</label>
+                                            <div class="custom-control custom-radio">
+                                                <input type="radio" id="weekly" name="invoicetype" class="custom-control-input" value="1" checked>
+                                                <label class="custom-control-label" for="weekly">Weekly</label>
+                                            </div>
+                                            <div class="custom-control custom-radio">
+                                                <input type="radio" id="monthly" name="invoicetype" class="custom-control-input" value="2">
+                                                <label class="custom-control-label" for="monthly">Monthly</label>
+                                            </div>
+                                        </div> -->
 
+                                                <!--  <div class="col-md-4">
 
-                     <!-- This will start a timer at failed login attempt. -->
-                     <?php
-                     if (@$total_count == 3) {
-                     ?><div id="timer">
-                           <p> You can try Again after <span id="countdowntimer">10</span> Seconds</p>
+                                            <div class="form-group">
+                                                <label class="control-label">Supervisor(s) *</label>
+                                                <select class="select2 select2-multiple" style="width: 100%" multiple="multiple" name="supervisor[]" id="supervisor"  Placeholder="Select Supervisor">
+                                                    <?php
+                                                    //$mysql = new Mysql();
+                                                    //$mysql -> dbConnect();
+                                                    // $statusquery = "SELECT * FROM `tbl_user` WHERE  `roleid` IN (10) AND `isdelete`=0 AND `isactive`=0";
+                                                    // $strow =  $mysql -> selectFreeRun($statusquery);
+                                                    //while($statusresult = mysqli_fetch_array($strow))
+                                                    {
+                                                    ?>
+                                                     //   <option value="<?php  // echo $statusresult['id']
+                                                                            ?>"><?php //echo $statusresult['//name']
+                                                                                ?></option>
+                                                      <?php
+                                                    }
+                                                    // $mysql -> dbDisconnect();
+                                                        ?>
+                                                </select> 
+                                            </div>
+
+                                        </div> -->
+                                            </div>
+                                        </div>
+                                        <div class="form-actions">
+                                            <button type="submit" name="insert" class="btn btn-success" id="submit">Submit</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
                         </div>
-                        <script type="text/javascript">
-                           var timeleft = 10;
-                           var downloadTimer = setInterval(function() {
-                              timeleft--;
-                              document.getElementById("countdowntimer").textContent = timeleft;
-                              let btn = document.querySelector("#timer");
-                              let login = document.querySelector(".btn-info");
-                              let alert = document.querySelector("#alert");
-                              if (timeleft > 0) {
-                                 login.style.display = "none";
-                                 login.disabled = true;
-                              }
-                              if (timeleft == 0) {
-                                 console.log(alert);
-                                 clearInterval(downloadTimer);
-                                 btn.style.display = "none";
-                                 login.style.display = "block";
-                                 login.disabled = false;
-                                 alert.style.display = "none";
-                              }
-                           }, 1000);
-                        </script><?php } ?>
+                        <div class="card-body" id="ViewFormDiv">
+                            <div class="table-responsive m-t-40" style="margin-top: 0px;">
+                                <table id="myTable" class="table table-responsive tabelvendor">
+                                    <thead class="default">
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Invoice Type</th>
+                                            <th>Date</th>
+                                            <th>Customer</th>
+                                            <th>Status</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php
+                                        $mysql = new Mysql();
+                                        $mysql->dbConnect();
+                                        $query = "SELECT *, DATE_FORMAT(`insert_date`,'%D %M%, %Y') as date FROM `tbl_depot` WHERE `isdelete`= 0";
+                                        $rolerow =  $mysql->selectFreeRun($query);
+                                        while ($roleresult = mysqli_fetch_array($rolerow)) {
+                                            // $invoicetype='';
+                                            // if($roleresult['invoicetype']==1)
+                                            // {
+                                            //     $invoicetype = 'Weekly';
+                                            // }
+                                            // else if($roleresult['invoicetype']==2)
+                                            // {
+                                            //     $invoicetype = 'Monthly';
+                                            // }
+                                        ?>
+                                            <tr>
+                                                <td style="color: blue;">
+                                                    <span onclick="loadpage(<?php echo $roleresult['id']; ?>)"><?php echo $roleresult['name'] ?><br>
+                                                        <small><?php echo $roleresult['supervisor_type']; ?></small>
+                                                    </span>
+                                                </td>
+                                                <td><?php //echo $invoicetype;
+                                                    ?></td>
+                                                <td><?php echo $roleresult['date']; ?></td>
+                                                <td>
+                                                    <button type="button" data-toggle='tooltip' title='Add Customer' class="btn btn-success" onclick="addcustomer(<?php echo $roleresult['id']; ?>);">Add Customer</button>
+                                                </td>
+                                                <td id="<?php echo $roleresult['id']; ?>-td"><?php
+                                                                                                if ($roleresult['isactive'] == 0) {
+                                                                                                ?>
+                                                        <button type="button" class="btn btn-success isactivebtn" onclick="Isactivebtn(<?php echo $roleresult['id']; ?>,<?php echo $roleresult['isactive']; ?>,'Depotisactive');">Active</button>
+                                                </td>
+                                            <?php
+                                                                                                } else {
+                                            ?>
+                                                <button type="button" class="btn btn-danger isactivebtn" onclick="Isactivebtn(<?php echo $roleresult['id']; ?>,<?php echo $roleresult['isactive']; ?>,'Depotisactive');">Inactive</button></td>
+                                            <?php
+                                                                                                }
+                                            ?>
+                                            <td>
+
+                                                <a href="#" class="edit" onclick="edit(<?php echo $roleresult['id']; ?>);"><span><i class="fas fa-edit fa-lg"></i></span></a>
+
+                                                <a href="#" class="delete" onclick="deleterow(<?php echo $roleresult['id']; ?>);"><span><i class="fas fa-trash-alt fa-lg"></i></span></a>
 
 
-                     <div class="col-xs-12 p-b-20">
-                        <button class="btn btn-block btn-lg btn-info btn-rounded" type="submit" name="loginsub">Log In</button>
-                     </div>
 
-                  </div>
-               </form>
-               <form class="form-horizontal" id="recoverform" action="" method="post">
-                  <div class="form-group ">
-                     <div class="col-xs-12">
-                        <h3>Recover Password</h3>
-                        <p class="text-muted">Enter your Email and instructions will be sent to you! </p>
-                     </div>
-                  </div>
-                  <div class="form-group ">
-                     <div class="col-xs-12">
-                        <input class="form-control" type="text" id="name" name="name" required="" placeholder="Name">
-                     </div>
-                  </div>
-                  <div class="form-group ">
-                     <div class="col-xs-12">
-                        <input class="form-control" type="email" id="email" name="email" required="" placeholder="Email">
-                     </div>
-                  </div>
-                  <div class="form-group text-center m-t-20">
-                     <div class="col-xs-12">
-                        <button class="btn btn-primary btn-lg btn-block text-uppercase waves-effect waves-light" type="submit" id="recoverbtn" name="recoverbtn">Reset</button>
-                     </div>
-                  </div>
-               </form>
+                                            </td>
+                                            </tr>
+                                        <?php
+                                        }
+                                        $mysql->dbDisconnect();
+                                        ?>
+                                    </tbody>
+
+                                </table>
+                                <br>
+
+                            </div>
+                        </div>
+                    </div>
+                </main>
+
+                <div id="addcustomer" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header" style="background-color: rgb(255 236 230);">
+                                <h4 class="modal-title">Add Customer</h4>
+                                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">Ã—</button>
+                            </div>
+                            <div class="modal-body">
+                                <form method="post" id="addcustomerForm" name="addcustomerForm" action="">
+                                    <input type="hidden" name="depot_id" id="depot_id">
+                                    <div class="form-group">
+                                        <label class="control-label">Customer *</label>
+                                        <input type="text" name="customer" id="customer" class="form-control" placeholder="" required="required">
+                                    </div>
+                                </form>
+                                <br>
+                                <table id="Ownertbl" class="table table-responsive table-bordered" aria-describedby="example2_info">
+                                    <thead class="default">
+                                        <tr role="row">
+                                            <th width="500">Customer</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="customerbody">
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" onclick="AddCustomberDatatbl()" class="btn btn-success waves-effect waves-light">Save changes</button>
+                                <button type="button" class="btn btn-secondary waves-effect" data-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
             </div>
-         </div>
-      </div>
-   </section>
+        </div>
 
+        <?php
+        include('footer.php');
+        ?>
+    </div>
 
-   <script src="./assets/node_modules/jquery/jquery-3.2.1.min.js"></script>
-   <!--Bootstrap tether Core JavaScript -->
-   <script src="./assets/node_modules/popper/popper.min.js"></script>
-   <script src="./assets/node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
-   <script src="home/dist/js/validation.js"></script>
-   <script src="./assets/node_modules/sweetalert/sweetalert.min.js"></script>
-   <script src="./assets/node_modules/sweetalert/jquery.sweet-alert.custom.js"></script>
-   <?php
-   include('home/footerScript.php');
-   ?>
-   <!--Custom JavaScript -->
-   <script type="text/javascript">
-      $(function() {
-         $(".preloader").fadeOut();
-      });
-      $(function() {
-         $('[data-toggle="tooltip"]').tooltip()
-      });
-      $('#to-recover').on("click", function() {
-         $("#loginform").slideUp();
-         $("#recoverform").fadeIn();
-      });
-      $('#recoverbtn').on("click", function() {
-         $("#recoverform").validate({
-            rules: {
-               email: 'required',
-               name: 'required',
-            },
-            messages: {
-               email: "Please enter your email",
-               name: "Please enter your name",
-            },
-            submitHandler: function(form) {
+    <?php
+    include('footerScript.php');
+    ?>
+    <script type="text/javascript">
+        function loadpage(did) {
+            $.ajax({
 
-               event.preventDefault();
-               $.ajax({
-                  url: "InsertData.php",
-                  type: "POST",
-                  dataType: "JSON",
-                  data: $("#recoverform").serialize() + "&action=recoverform",
-                  cache: false,
-                  processData: false,
-                  success: function(data) {
-                     if (data.status == 1) {
-                        myAlert(data.title + "@#@" + data.message + "@#@success");
-                        $("#loginform").fadeIn();
-                        $("#recoverform").slideUp();
-                     } else {
-                        myAlert(data.title + "@#@" + data.message + "@#@danger");
-                     }
-                  }
-               });
+                type: "POST",
+
+                url: "loaddata.php",
+
+                data: {
+                    action: 'DepotSetSessionData',
+                    did: did
+                },
+
+                dataType: 'json',
+
+                success: function(data) {
+                    if (data.status == 1) {
+                        window.location = '<?php echo $webroot ?>depot_detail.php';
+                    }
+
+                }
+
+            });
+
+        }
+
+        function addcustomer(did) {
+            $('#addcustomer').modal('show');
+            $('#depot_id').val(did);
+            event.preventDefault();
+            showCustomber(did);
+        }
+
+        function AddCustomberDatatbl() {
+            var did = $('#depot_id').val();
+            var customer = $('#customer').val();
+            event.preventDefault();
+            if (did && customer) {
+                $.ajax({
+                    type: "POST",
+                    url: "InsertData.php",
+                    data: {
+                        action: 'AddWorkforceDepotCustomber',
+                        did: did,
+                        customer: customer
+                    },
+                    dataType: 'json',
+                    success: function(data) {
+                        if (data.status == 1) {
+                            myAlert(data.title + "@#@" + data.message + "@#@success");
+                            $('#addcustomerForm')[0].reset();
+                            showCustomber(did);
+                        } else {
+                            myAlert(data.title + "@#@" + data.message + "@#@danger");
+                        }
+                        $('#addcustomer').modal('hide');
+                    }
+                });
+            } else {
+                myAlert("Error @#@ Please Enter Your Customer.@#@danger");
+            }
+
+        }
+
+        function showCustomber(id) {
+            $.ajax({
+                type: "POST",
+                url: "loaddata.php",
+                data: {
+                    action: 'ShowWorkforceDepotCustomber',
+                    id: id
+                },
+                dataType: 'json',
+                success: function(data) {
+                    if (data.status == 1) {
+                        $('#customerbody').html(data.tbldata);
+                    } else {
+                        $('#customerbody').html(data.tbldata);
+                    }
+                }
+            });
+        }
+
+        function deleteworkforcedepotcustomerrow(id, depotid) {
+            $.ajax({
+
+                type: "POST",
+
+                url: "loaddata.php",
+
+                data: {
+                    action: 'deleteworkforcedepotcustomer',
+                    id: id
+                },
+
+                dataType: 'json',
+
+                success: function(data) {
+                    if (data.status == 1) {
+                        myAlert("Delete @#@ Data has been deleted successfully.@#@success");
+                        $('#addcustomer').modal('hide');
+                        showvehicle(depotid);
+
+                    } else {
+                        myAlert("Delete @#@ Data can not been deleted.@#@danger");
+                    }
+
+                }
+
+            });
+        }
+
+        $(document).ready(function() {
+            $("#AddFormDiv,#AddDiv").hide();
+
+            $("#depotForm").validate({
+
+                rules: {
+                    name: 'required',
+                },
+
+                messages: {
+
+                    name: "Please enter your name",
+
+                },
+
+            });
+
+        });
+
+        $(function() {
+
+            $('#myTable').DataTable();
+
+            $(function() {
+
+                var table = $('#example').DataTable({
+
+                    "columnDefs": [{
+
+                        "visible": false,
+
+                        "targets": 2
+
+                    }],
+
+                    "order": [
+
+                        [2, 'asc']
+
+                    ],
+
+                    "displayLength": 25,
+
+                    "drawCallback": function(settings) {
+
+                        var api = this.api();
+
+                        var rows = api.rows({
+
+                            page: 'current'
+
+                        }).nodes();
+
+                        var last = null;
+
+                        api.column(2, {
+
+                            page: 'current'
+
+                        }).data().each(function(group, i) {
+
+                            if (last !== group) {
+
+                                $(rows).eq(i).before('<tr class="group"><td colspan="5">' + group + '</td></tr>');
+
+                                last = group;
+
+                            }
+
+                        });
+
+                    }
+
+                });
+
+            });
+        });
+
+        function edit(id) {
+
+            $('#id').val(id);
+
+            ShowHideDiv('view');
+
+            $.ajax({
+
+                type: "POST",
+
+                url: "loaddata.php",
+
+                data: {
+                    action: 'DepotUpdateData',
+                    id: id
+                },
+
+                dataType: 'json',
+
+                success: function(data) {
+
+                    $result_data = data.userdata;
+                    $('#name').val($result_data['name']);
+                    // $("input[name='invoicetype'][value='"+$result_data['invoicetype']+"']").prop('checked', true);
+                    $("#submit").attr('name', 'update');
+                    $("#submit").text('Update');
+
+                }
+
+            });
+        }
+
+        function deleterow(id) {
+
+            $.ajax({
+
+                type: "POST",
+
+                url: "loaddata.php",
+
+                data: {
+                    action: 'DepotDeleteData',
+                    id: id
+                },
+
+                dataType: 'json',
+
+                success: function(data) {
+                    if (data.status == 1) {
+                        window.location.reload();
+                        myAlert("Delete @#@ Data has been deleted successfully.@#@success");
+                    } else {
+                        myAlert("Delete @#@ Data can not been deleted.@#@danger");
+                    }
+                }
+
+            });
+        }
+
+        function ShowHideDiv(divValue) {
+
+            if (divValue == 'view')
+
+            {
+
+                $('#depotForm')[0].reset();
+
+                $("#AddFormDiv,#AddDiv").show();
+
+                $("#ViewFormDiv,#ViewDiv").hide();
 
             }
-         });
-      });
-   </script>
 
+            if (divValue == 'add')
+
+            {
+
+                $("#AddFormDiv,#AddDiv").hide();
+
+                $("#ViewFormDiv,#ViewDiv").show();
+
+            }
+        }
+    </script>
 </body>
 
 </html>

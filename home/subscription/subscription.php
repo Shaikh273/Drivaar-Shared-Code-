@@ -17,7 +17,6 @@ if (isset($_GET['set'])) {
 } elseif (isset($_POST['platinum'])) {
     header("Location: ../subscription/platinum.php");
 }
-
 ?>
 
 <!DOCTYPE html>
